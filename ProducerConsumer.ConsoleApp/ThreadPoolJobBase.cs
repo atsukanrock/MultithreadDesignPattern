@@ -24,7 +24,7 @@ namespace ProducerConsumer.ConsoleApp
             get { return _shutdownRequested; }
         }
 
-        public void Run(object state)
+        public void Run()
         {
             _runningThread = Thread.CurrentThread;
             try

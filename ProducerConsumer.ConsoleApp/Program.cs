@@ -1,11 +1,12 @@
-﻿#define UseBlockingCollection
+﻿//#define UseBlockingCollection
 
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 #if UseBlockingCollection
 using System.Collections.Concurrent;
 #endif
-using System;
-using System.Collections.Generic;
-using System.Threading;
+
 #if !UseBlockingCollection
 using MultithreadDesignPattern.ProducerConsumer;
 
@@ -48,7 +49,7 @@ namespace ProducerConsumer.ConsoleApp
                     new ProducerBlockingCollection(
 #endif
                         "Producer-" + i, producerWorkload, productIdGenerator, channel);
-                ThreadPool.QueueUserWorkItem(producer.Run);
+                Task.Run(() => producer.Run());
                 producers.Add(producer);
             }
 
@@ -61,7 +62,7 @@ namespace ProducerConsumer.ConsoleApp
                     new ConsumerBlockingCollection(
 #endif
                         "Consumer-" + i, consumerWorkload, channel);
-                ThreadPool.QueueUserWorkItem(consumer.Run);
+                Task.Run(() => consumer.Run());
                 consumers.Add(consumer);
             }
 
