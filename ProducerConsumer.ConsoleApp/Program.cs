@@ -1,4 +1,4 @@
-﻿//#define UseBlockingCollection
+﻿#define UseBlockingCollection
 
 #if UseBlockingCollection
 using System.Collections.Concurrent;
@@ -30,6 +30,9 @@ namespace ProducerConsumer.ConsoleApp
             var producers = new List<Producer>();
             var consumers = new List<Consumer>();
 #else
+            // By calling other constructor overloads of BlockingCollection<T>,
+            // it becomes possible to switch algorithm of the collection among
+            // FIFO (ConcurrentQueue<T>), LIFO (ConcurrentStack<T>) and so on.
             var channel = new BlockingCollection<string>(channelCapacity);
             var producers = new List<ProducerBlockingCollection>();
             var consumers = new List<ConsumerBlockingCollection>();
@@ -66,6 +69,9 @@ namespace ProducerConsumer.ConsoleApp
             producers.ForEach(p => p.Shutdown());
             consumers.ForEach(c => c.Shutdown());
             Console.ReadLine();
+#if UseBlockingCollection
+            channel.Dispose();
+#endif
         }
     }
 }
