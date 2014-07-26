@@ -38,7 +38,6 @@ namespace ProducerConsumer.ConsoleApp
             var producers = new List<ProducerBlockingCollection>();
             var consumers = new List<ConsumerBlockingCollection>();
 #endif
-            var productIdGenerator = new SequentialIdGenerator();
 
             for (int i = 0; i < producerCount; i++)
             {
@@ -48,7 +47,7 @@ namespace ProducerConsumer.ConsoleApp
 #else
                     new ProducerBlockingCollection(
 #endif
-                        "Producer-" + i, producerWorkload, productIdGenerator, channel);
+                        "Producer#" + i, producerWorkload, channel);
                 Task.Run(() => producer.Run());
                 producers.Add(producer);
             }
@@ -61,7 +60,7 @@ namespace ProducerConsumer.ConsoleApp
 #else
                     new ConsumerBlockingCollection(
 #endif
-                        "Consumer-" + i, consumerWorkload, channel);
+                        "Consumer#" + i, consumerWorkload, channel);
                 Task.Run(() => consumer.Run());
                 consumers.Add(consumer);
             }

@@ -6,8 +6,8 @@ namespace ProducerConsumer.ConsoleApp
     {
         private readonly Channel<string> _channel;
 
-        public Producer(string name, int workload, SequentialIdGenerator idGenerator, Channel<string> channel)
-            : base(name, workload, idGenerator)
+        public Producer(string name, int workload, Channel<string> channel)
+            : base(name, workload)
         {
             _channel = channel;
         }

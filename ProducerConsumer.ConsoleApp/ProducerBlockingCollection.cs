@@ -8,9 +8,8 @@ namespace ProducerConsumer.ConsoleApp
 
         public ProducerBlockingCollection(string name,
                                           int workload,
-                                          SequentialIdGenerator idGenerator,
                                           BlockingCollection<string> channel)
-            : base(name, workload, idGenerator)
+            : base(name, workload)
         {
             _channel = channel;
         }
