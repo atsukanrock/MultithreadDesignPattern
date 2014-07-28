@@ -19,6 +19,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{8736194A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSearch", "ImageSearch\ImageSearch.csproj", "{9F773F5E-C448-4EA6-B0B4-5707018D3FF6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessor.Web", "ImageProcessor.Web\ImageProcessor.Web.csproj", "{8A7DC361-E1B3-41FE-84B8-9895C789D918}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessor.Admin", "ImageProcessor.Admin\ImageProcessor.Admin.csproj", "{BA70DF92-F730-4B07-A6C3-0F5CE16A8F75}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +57,14 @@ Global
 		{9F773F5E-C448-4EA6-B0B4-5707018D3FF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F773F5E-C448-4EA6-B0B4-5707018D3FF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F773F5E-C448-4EA6-B0B4-5707018D3FF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A7DC361-E1B3-41FE-84B8-9895C789D918}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A7DC361-E1B3-41FE-84B8-9895C789D918}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A7DC361-E1B3-41FE-84B8-9895C789D918}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A7DC361-E1B3-41FE-84B8-9895C789D918}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA70DF92-F730-4B07-A6C3-0F5CE16A8F75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA70DF92-F730-4B07-A6C3-0F5CE16A8F75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA70DF92-F730-4B07-A6C3-0F5CE16A8F75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA70DF92-F730-4B07-A6C3-0F5CE16A8F75}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

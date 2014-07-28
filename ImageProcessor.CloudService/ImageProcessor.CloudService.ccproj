@@ -53,16 +53,28 @@
       <RoleName>ImageProcessor.SimpleWorker</RoleName>
       <UpdateDiagnosticsConnectionStringOnPublish>True</UpdateDiagnosticsConnectionStringOnPublish>
     </ProjectReference>
+    <ProjectReference Include="..\ImageProcessor.Web\ImageProcessor.Web.csproj">
+      <Name>ImageProcessor.Web</Name>
+      <Project>{8a7dc361-e1b3-41fe-84b8-9895c789d918}</Project>
+      <Private>True</Private>
+      <RoleType>Web</RoleType>
+      <RoleName>ImageProcessor.Web</RoleName>
+      <UpdateDiagnosticsConnectionStringOnPublish>True</UpdateDiagnosticsConnectionStringOnPublish>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ImageProcessor.MultithreadWorkerContent\" />
     <Folder Include="ImageProcessor.SimpleWorkerContent\" />
+    <Folder Include="ImageProcessor.WebContent\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ImageProcessor.MultithreadWorkerContent\diagnostics.wadcfg">
       <SubType>Content</SubType>
     </Content>
     <Content Include="ImageProcessor.SimpleWorkerContent\diagnostics.wadcfg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ImageProcessor.WebContent\diagnostics.wadcfg">
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>
