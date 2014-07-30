@@ -13,8 +13,10 @@
             <input type="text" id="keyword" maxlength="255" class="form-control input-lg" />
             @*@Html.TextBoxFor(model => model.Keyword, new {maxlength = 255, @class = "form-control input-lg"})*@
         </div>
-        <div class="form-group form-group-lg">
-            <input type="button" id="postkeyword" value="指定" class="btn btn-primary btn-lg" disabled="disabled" />
+        <div class="row">
+            <div class="col-xs-4 col-xs-offset-4">
+                <input type="button" id="postkeyword" value="指定" class="btn btn-primary btn-lg btn-block" disabled="disabled" />
+            </div>
         </div>
     </div>
 </div>
@@ -31,9 +33,6 @@
             var keywordHub = $.connection.keywordHub;
             var $postkeyword = $('#postkeyword');
 
-            //keywordHub.client.addPostedKeyword = function(keyword) {
-            //};
-
             $.connection.hub.start().done(function() {
                 $postkeyword.click(function() {
                     var $keyword = $('#keyword');
@@ -41,10 +40,19 @@
                     if (!keyword) {
                         return;
                     }
-                    keywordHub.server.post(keyword);
-                    $keyword.val('').focus();
+
+                    $postkeyword.prop('disabled', true);
+                    keywordHub.server.post(keyword).done(function() {
+                        $keyword.val('').focus();
+                    }).fail(function() {
+                        alert('キーワードを送れませんでした。');
+                    }).always(function() {
+                        $postkeyword.prop('disabled', false);
+                    });
                 });
                 $postkeyword.prop('disabled', false);
+            }).fail(function() {
+                alert('サーバーに接続できませんでした。');
             });
         });
     </script>

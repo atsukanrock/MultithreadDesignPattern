@@ -25,6 +25,8 @@
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="20" Height="20" Fill="{Binding ConnectionStateFill}" Stroke="Black"
+                                 VerticalAlignment="Center" Margin="10,10,0,10" />
                         <Button Content="取得開始" Command="{Binding StartReceivingKeywordsCommand}"
                                 VerticalAlignment="Center" Margin="10,10,0,10" />
                         <Button Content="取得停止" Command="{Binding StopReceivingKeywordsCommand}"
