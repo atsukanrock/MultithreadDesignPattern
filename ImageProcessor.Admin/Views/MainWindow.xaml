@@ -1,0 +1,65 @@
+﻿<controls:MetroWindow x:Class="ImageProcessor.Admin.Views.MainWindow"
+                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                      xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+                      xmlns:viewModels="clr-namespace:ImageProcessor.Admin.ViewModels"
+                      Title="Image Processor Admin Tool" Width="1600" Height="900" GlowBrush="Black">
+    <controls:MetroWindow.DataContext>
+        <viewModels:MainViewModel />
+    </controls:MetroWindow.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="3*" />
+        </Grid.RowDefinitions>
+        <GroupBox Header="キーワード">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="取得開始" Command="{Binding StartReceivingKeywordsCommand}"
+                                VerticalAlignment="Center" Margin="10,10,0,10" />
+                        <Button Content="取得停止" Command="{Binding StopReceivingKeywordsCommand}"
+                                VerticalAlignment="Center" Margin="10,10,0,10" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="溜まったフォース (キーワード) :" VerticalAlignment="Center" Margin="0,10,10,10" />
+                        <TextBlock Text="{Binding PostedKeywords.Count}" FontSize="{Binding KeywordCountFontSize}"
+                                   VerticalAlignment="Center" Margin="0,10,10,10" />
+                    </StackPanel>
+                </Grid>
+                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding PostedKeywords}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="White" BorderThickness="1" CornerRadius="3" Margin="10,10,0,0"
+                                        Padding="8,3" VerticalAlignment="Center">
+                                    <Border.Effect>
+                                        <DropShadowEffect ShadowDepth="3" />
+                                    </Border.Effect>
+                                    <TextBlock Text="{Binding Value}" FontSize="{Binding FontSize}" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="サーバーで画像処理開始" Command="{Binding StartProcessingCommand}" Margin="0,10,10,10" />
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+    </Grid>
+</controls:MetroWindow>

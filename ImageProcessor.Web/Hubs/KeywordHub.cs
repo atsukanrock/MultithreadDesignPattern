@@ -6,7 +6,7 @@ namespace ImageProcessor.Web.Hubs
     {
         public void Post(string keyword)
         {
-            Clients.All.broadcastKeyword(keyword);
+            Clients.All.addPostedKeyword(keyword);
         }
     }
 }

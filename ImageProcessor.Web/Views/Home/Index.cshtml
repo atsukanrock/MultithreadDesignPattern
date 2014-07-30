@@ -28,14 +28,11 @@
     <!--Add script to update the page and send messages.-->
     <script type="text/javascript">
         $(function() {
-            // Declare a proxy to reference the hub.
             var keywordHub = $.connection.keywordHub;
             var $postkeyword = $('#postkeyword');
 
-            // Create a function that the hub can call to broadcast messages.
-            keywordHub.client.broadcastKeyword = function(keyword) {
-                alert(keyword);
-            };
+            //keywordHub.client.addPostedKeyword = function(keyword) {
+            //};
 
             $.connection.hub.start().done(function() {
                 $postkeyword.click(function() {
