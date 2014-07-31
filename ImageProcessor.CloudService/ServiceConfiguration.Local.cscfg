@@ -12,6 +12,8 @@
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
       <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="ConsumerThreadCount" value="10" />
+      <Setting name="ChannelCapacity" value="10" />
     </ConfigurationSettings>
   </Role>
   <Role name="ImageProcessor.Web">
@@ -25,6 +27,7 @@
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
       <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="AzureMarketplaceAccountKey" value="" />
     </ConfigurationSettings>
   </Role>
 </ServiceConfiguration>

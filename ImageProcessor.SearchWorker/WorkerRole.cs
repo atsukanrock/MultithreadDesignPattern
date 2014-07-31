@@ -80,8 +80,8 @@ namespace ImageProcessor.SearchWorker
             const string adult = "Off"; // Adult filter: Off / Moderate / Strict
             //const int top = 5; // How many numbers of images do I want? default: 50
             const string format = "json"; // xml (ATOM) / json
-            const string accountKey = "<My Account Key>";
 
+            var accountKey = RoleEnvironment.GetConfigurationSettingValue("AzureMarketplaceAccountKey");
             var httpClientHandler = new HttpClientHandler {Credentials = new NetworkCredential(accountKey, accountKey)};
             var httpClient = new HttpClient(httpClientHandler);
             var response = await httpClient.GetStringAsync("https://api.datamarket.azure.com/Bing/Search/Image" +
@@ -104,10 +104,19 @@ namespace ImageProcessor.SearchWorker
             foreach (var result in contents.d.results)
             {
                 var imageUri = new Uri(result.MediaUrl);
-                var response = await httpClient.GetAsync(imageUri);
-                if (response.StatusCode != HttpStatusCode.OK)
+                HttpResponseMessage response;
+                try
                 {
-                    // TODO: Handle error status code
+                    response = await httpClient.GetAsync(imageUri);
+                    if (response.StatusCode != HttpStatusCode.OK)
+                    {
+                        // TODO: Handle error status code
+                        continue;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceWarning("An error occurred while retrieving an image: {0}", ex);
                     continue;
                 }
 
@@ -147,8 +156,8 @@ namespace ImageProcessor.SearchWorker
             // see the MSDN topic at http://go.microsoft.com/fwlink/?LinkId=166357.
 
             // Open storage account using credentials from .cscfg file.
-            var storageAccount = CloudStorageAccount.Parse
-                (RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
+            var storageAccount = CloudStorageAccount.Parse(
+                RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
 
             Trace.TraceInformation("Creating keywords queue");
             var queueClient = storageAccount.CreateCloudQueueClient();
