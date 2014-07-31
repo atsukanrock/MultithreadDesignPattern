@@ -32,5 +32,14 @@ namespace ImageProcessor.Admin.Properties {
                 return ((string)(this["WebSiteUrl"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("UseDevelopmentStorage=true")]
+        public string StorageConnectionString {
+            get {
+                return ((string)(this["StorageConnectionString"]));
+            }
+        }
     }
 }

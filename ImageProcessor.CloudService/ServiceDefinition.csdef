@@ -31,4 +31,12 @@
       <Import moduleName="Diagnostics" />
     </Imports>
   </WebRole>
+  <WorkerRole name="ImageProcessor.SearchWorker" vmsize="Small">
+    <Imports>
+      <Import moduleName="Diagnostics" />
+    </Imports>
+    <ConfigurationSettings>
+      <Setting name="StorageConnectionString" />
+    </ConfigurationSettings>
+  </WorkerRole>
 </ServiceDefinition>

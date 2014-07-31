@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessor.Web", "Image
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessor.Admin", "ImageProcessor.Admin\ImageProcessor.Admin.csproj", "{BA70DF92-F730-4B07-A6C3-0F5CE16A8F75}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessor.SearchWorker", "ImageProcessor.SearchWorker\ImageProcessor.SearchWorker.csproj", "{BFF7022F-0A34-4B8E-923F-C0A551B4F6E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -65,6 +67,10 @@ Global
 		{BA70DF92-F730-4B07-A6C3-0F5CE16A8F75}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA70DF92-F730-4B07-A6C3-0F5CE16A8F75}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BA70DF92-F730-4B07-A6C3-0F5CE16A8F75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFF7022F-0A34-4B8E-923F-C0A551B4F6E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFF7022F-0A34-4B8E-923F-C0A551B4F6E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFF7022F-0A34-4B8E-923F-C0A551B4F6E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFF7022F-0A34-4B8E-923F-C0A551B4F6E9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

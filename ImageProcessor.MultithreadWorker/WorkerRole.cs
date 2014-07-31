@@ -11,6 +11,8 @@ namespace ImageProcessor.MultithreadWorker
         {
             // This is a sample worker implementation. Replace with your logic.
             Trace.TraceInformation("ImageProcessor.MultithreadWorker entry point called");
+            Thread.Sleep(600000);
+            return;
 
             while (true)
             {

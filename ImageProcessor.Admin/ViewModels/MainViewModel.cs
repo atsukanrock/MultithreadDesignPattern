@@ -13,6 +13,8 @@ using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Threading;
 using ImageProcessor.Admin.Properties;
 using Microsoft.AspNet.SignalR.Client;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Queue;
 
 namespace ImageProcessor.Admin.ViewModels
 {
@@ -37,7 +39,7 @@ namespace ImageProcessor.Admin.ViewModels
 
             StartReceivingKeywordsCommand = new RelayCommand(StartReceivingKeywords, () => Connection == null);
             StopReceivingKeywordsCommand = new RelayCommand(StopReceivingKeywords, () => Connection != null);
-            StartProcessingCommand = new RelayCommand(StartProcessing);
+            StartProcessingCommand = new RelayCommand(StartProcessing, () => PostedKeywords.Any());
 
             _postedKeywords.CollectionChanged += PostedKeywordsOnCollectionChanged;
 
@@ -150,12 +152,27 @@ namespace ImageProcessor.Admin.ViewModels
             // ReSharper disable PossibleLossOfFraction
             KeywordCountFontSize = SystemFonts.MessageFontSize + PostedKeywords.Count / 5;
             // ReSharper restore PossibleLossOfFraction
+
+            StartProcessingCommand.RaiseCanExecuteChanged();
         }
 
         public RelayCommand StartProcessingCommand { get; private set; }
 
-        private void StartProcessing()
+        private async void StartProcessing()
         {
+            // TODO: If connection is open, close
+
+            var storageAccount = CloudStorageAccount.Parse(Settings.Default.StorageConnectionString);
+
+            var queueClient = storageAccount.CreateCloudQueueClient();
+            var keywordsQueue = queueClient.GetQueueReference("keywords");
+            await keywordsQueue.CreateIfNotExistsAsync();
+
+            foreach (var keyword in PostedKeywords)
+            {
+                await keywordsQueue.AddMessageAsync(new CloudQueueMessage(keyword.Value));
+            }
+            PostedKeywords.Clear();
         }
     }
 }

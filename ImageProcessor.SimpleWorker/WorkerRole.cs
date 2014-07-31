@@ -24,6 +24,8 @@ namespace ImageProcessor.SimpleWorker
         {
             // This is a sample worker implementation. Replace with your logic.
             Trace.TraceInformation("ImageProcessor.SimpleWorker entry point called");
+            Thread.Sleep(600000);
+            return;
 
             var httpClient = new HttpClient();
             while (true)
