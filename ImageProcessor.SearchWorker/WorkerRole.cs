@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using ImageProcessor.Storage.Queue.Messages;
 using ImageSearchTest.Bing.ResultObjects;
 using Microsoft.WindowsAzure.ServiceRuntime;
 using Microsoft.WindowsAzure.Storage;
@@ -80,7 +80,7 @@ namespace ImageProcessor.SearchWorker
             const string adult = "Off"; // Adult filter: Off / Moderate / Strict
             //const int top = 5; // How many numbers of images do I want? default: 50
             const string format = "json"; // xml (ATOM) / json
-            const string accountKey = "<My Account Keys>";
+            const string accountKey = "<My Account Key>";
 
             var httpClientHandler = new HttpClientHandler {Credentials = new NetworkCredential(accountKey, accountKey)};
             var httpClient = new HttpClient(httpClientHandler);
@@ -130,11 +130,7 @@ namespace ImageProcessor.SearchWorker
 
         private async Task NotifySearchResultToProcessingWorkersAsync(string keyword, IEnumerable<string> fileNames)
         {
-            var msgObj = new
-            {
-                Keyword = keyword,
-                FileNames = fileNames.ToArray()
-            };
+            var msgObj = new ProcessingRequestMessage(keyword, fileNames);
             var msgJson = JsonConvert.SerializeObject(msgObj);
             var queueMsg = new CloudQueueMessage(msgJson);
 

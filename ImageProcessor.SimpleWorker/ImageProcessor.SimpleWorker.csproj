@@ -83,6 +83,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ImageProcessor.Core\ImageProcessor.Core.csproj">
+      <Project>{139DFC32-67BE-417D-A384-72338921B31D}</Project>
+      <Name>ImageProcessor.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ImageSearch\ImageSearch.csproj">
       <Project>{9F773F5E-C448-4EA6-B0B4-5707018D3FF6}</Project>
       <Name>ImageSearch</Name>
