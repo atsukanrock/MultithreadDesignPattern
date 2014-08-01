@@ -122,10 +122,14 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Converters\NullToBooleanConverter.cs" />
+    <Compile Include="Models\ExceptionThrownEventArgs.cs" />
     <Compile Include="Models\ImageProcessor.cs" />
     <Compile Include="Models\ImageProcessedEventArgs.cs" />
+    <Compile Include="Models\ImageRetrievedEventArgs.cs" />
+    <Compile Include="Models\ImageRetriever.cs" />
     <Compile Include="Models\ImageSearchedEventArgs.cs" />
     <Compile Include="Models\ImageSearcher.cs" />
+    <Compile Include="Models\WorkerBase.cs" />
     <Compile Include="ViewModels\KeywordViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Views\MainWindow.xaml.cs">

@@ -1,20 +1,27 @@
 using System;
-using ImageProcessor.Storage.Queue.Messages;
+using ImageSearchTest.Bing.ResultObjects;
 
 namespace ImageProcessor.Admin.Models
 {
     internal class ImageSearchedEventArgs : EventArgs
     {
-        private readonly ProcessingRequestMessage _processingRequestMessage;
+        private readonly string _keyword;
+        private readonly ImageSearchObject _imageSearchResult;
 
-        public ImageSearchedEventArgs(ProcessingRequestMessage processingRequestMessage)
+        public ImageSearchedEventArgs(string keyword, ImageSearchObject imageSearchResult)
         {
-            _processingRequestMessage = processingRequestMessage;
+            _keyword = keyword;
+            _imageSearchResult = imageSearchResult;
         }
 
-        public ProcessingRequestMessage ProcessingRequestMessage
+        public string Keyword
         {
-            get { return _processingRequestMessage; }
+            get { return _keyword; }
+        }
+
+        public ImageSearchObject ImageSearchResult
+        {
+            get { return _imageSearchResult; }
         }
     }
 }

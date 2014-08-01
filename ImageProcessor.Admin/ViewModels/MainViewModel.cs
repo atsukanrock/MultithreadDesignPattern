@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -18,7 +19,6 @@ using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Threading;
 using ImageProcessor.Admin.Models;
 using ImageProcessor.Admin.Properties;
-using ImageProcessor.Storage.Queue.Messages;
 using Microsoft.AspNet.SignalR.Client;
 
 namespace ImageProcessor.Admin.ViewModels
@@ -41,12 +41,13 @@ namespace ImageProcessor.Admin.ViewModels
         private readonly ObservableCollection<KeywordViewModel> _postedKeywords =
             new ObservableCollection<KeywordViewModel>();
 
-        private readonly ObservableCollection<ProcessingRequestMessage> _processingRequestMessages =
-            new ObservableCollection<ProcessingRequestMessage>();
+        private readonly ObservableCollection<string> _originalImagePaths = new ObservableCollection<string>();
 
         private int _imagesPerKeyword = 3;
 
         private int _imageSearcherThreadCount = 4;
+
+        private int _imageRetrieverThreadCount = 4;
 
         private bool _isSingleThreadMode = true;
 
@@ -57,7 +58,6 @@ namespace ImageProcessor.Admin.ViewModels
         private int _processingMilliseconds;
 
         private readonly ObservableCollection<string> _resultImagePaths = new ObservableCollection<string>();
-        private int _originalImageCount;
 
         #endregion Property backing fields
 
@@ -67,14 +67,15 @@ namespace ImageProcessor.Admin.ViewModels
 
             StartReceivingKeywordsCommand = new RelayCommand(StartReceivingKeywords, () => Connection == null);
             StopReceivingKeywordsCommand = new RelayCommand(StopReceivingKeywords, () => Connection != null);
+            ClearKeywordsCommand = new RelayCommand(ClearKeywords, () => PostedKeywords.Any());
             SearchImagesCommand = new RelayCommand(SearchImages, () => PostedKeywords.Any());
-            ClearOriginalImagesCommand = new RelayCommand(ClearOriginalImages, () => ProcessingRequestMessages.Any());
-            StartProcessingCommand = new RelayCommand(StartProcessing, () => ProcessingRequestMessages.Any());
+            ClearOriginalImagesCommand = new RelayCommand(ClearOriginalImages, () => OriginalImagePaths.Any());
+            StartProcessingCommand = new RelayCommand(StartProcessing, () => OriginalImagePaths.Any());
             ClearResultImagesCommand = new RelayCommand(ClearResultImages, () => ResultImagePaths.Any());
             ClearTemporaryFilesCommand = new RelayCommand(ClearTemporaryFiles);
 
             _postedKeywords.CollectionChanged += PostedKeywordsOnCollectionChanged;
-            _processingRequestMessages.CollectionChanged += ProcessingRequestMessagesOnCollectionChanged;
+            _originalImagePaths.CollectionChanged += OriginalImagePathsOnCollectionChanged;
             _resultImagePaths.CollectionChanged += ResultImagePathsOnCollectionChanged;
 
             if (IsInDesignMode)
@@ -201,7 +202,15 @@ namespace ImageProcessor.Admin.ViewModels
             KeywordCountFontSize = SystemFonts.MessageFontSize + PostedKeywords.Count / 5;
             // ReSharper restore PossibleLossOfFraction
 
+            ClearKeywordsCommand.RaiseCanExecuteChanged();
             StartProcessingCommand.RaiseCanExecuteChanged();
+        }
+
+        public RelayCommand ClearKeywordsCommand { get; private set; }
+
+        private void ClearKeywords()
+        {
+            PostedKeywords.Clear();
         }
 
         #endregion Keywords
@@ -212,53 +221,91 @@ namespace ImageProcessor.Admin.ViewModels
 
         private async void SearchImages()
         {
-            ProcessingRequestMessages.Clear();
+            ClearOriginalImages();
 
             // Channel of Producer-Consumer pattern
-            var channel = new BlockingCollection<string>();
-            foreach (var keyword in PostedKeywords.ToArray())
+            using (var searcherChannel = new BlockingCollection<string>())
+            using (var retrieverChannel = new BlockingCollection<Uri>())
             {
-                channel.Add(keyword.Value);
+                var keywordCount = PostedKeywords.Count;
+                var processedKeywordCount = 0;
+
+                foreach (var keyword in PostedKeywords)
+                {
+                    searcherChannel.Add(keyword.Value);
+                }
+                searcherChannel.CompleteAdding();
+
+                //await EnsureCloudStorage();
+                var searcherTasks = new List<Task>();
+                for (int i = 0; i < ImageSearcherThreadCount; i++)
+                {
+                    var searcher = new ImageSearcher(searcherChannel, ImagesPerKeyword);
+                    Observable.FromEventPattern<ImageSearchedEventArgs>(eh => searcher.ImageSearched += eh,
+                                                                        eh => searcher.ImageSearched -= eh)
+                              .Subscribe(args =>
+                              {
+                                  // ReSharper disable AccessToDisposedClosure
+                                  foreach (var result in args.EventArgs.ImageSearchResult.d.results)
+                                  {
+                                      retrieverChannel.Add(new Uri(result.MediaUrl));
+                                  }
+                                  if (keywordCount <= Interlocked.Increment(ref processedKeywordCount))
+                                  {
+                                      retrieverChannel.CompleteAdding();
+                                  }
+                                  // ReSharper restore AccessToDisposedClosure
+
+                                  //DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                                  //{
+                                  //    var keywordIndex =
+                                  //        PostedKeywords.TakeWhile(
+                                  //            kwd =>
+                                  //                !string.Equals(kwd.Value, args.EventArgs.Keyword,
+                                  //                               StringComparison.OrdinalIgnoreCase))
+                                  //                      .Count();
+                                  //    PostedKeywords.RemoveAt(keywordIndex);
+                                  //});
+                              });
+                    Observable.FromEventPattern<ExceptionThrownEventArgs<string>>(eh => searcher.ExceptionThrown += eh,
+                                                                                  eh => searcher.ExceptionThrown -= eh)
+                              .Subscribe(args =>
+                              {
+                                  if (keywordCount <= Interlocked.Increment(ref processedKeywordCount))
+                                  {
+                                      // ReSharper disable AccessToDisposedClosure
+                                      retrieverChannel.CompleteAdding();
+                                      // ReSharper restore AccessToDisposedClosure
+                                  }
+                              });
+
+                    searcherTasks.Add(Task.Run((Func<Task>)searcher.Run));
+                }
+
+                var retrieverTasks = new List<Task>();
+                for (int i = 0; i < ImageSearcherThreadCount; i++)
+                {
+                    var searcher = new ImageRetriever(retrieverChannel);
+                    Observable.FromEventPattern<ImageRetrievedEventArgs>(eh => searcher.ImageRetrieved += eh,
+                                                                         eh => searcher.ImageRetrieved -= eh)
+                              .ObserveOnDispatcher()
+                              .Subscribe(args => OriginalImagePaths.Add(args.EventArgs.TemporaryFilePath));
+
+                    retrieverTasks.Add(Task.Run((Func<Task>)searcher.Run));
+                }
+
+                await Task.WhenAll(searcherTasks);
+                await Task.WhenAll(retrieverTasks);
             }
-            channel.CompleteAdding();
-
-            //await EnsureCloudStorage();
-            var tasks = new List<Task>();
-            // in order to restrict the number of concurrent accesses
-            for (int i = 0; i < ImageSearcherThreadCount; i++)
-            {
-                var searcher = new ImageSearcher(channel, ImagesPerKeyword);
-                Observable.FromEventPattern<ImageSearchedEventArgs>(eh => searcher.OriginalImageGathered += eh,
-                                                                    eh => searcher.OriginalImageGathered -= eh)
-                          .ObserveOnDispatcher()
-                          .Subscribe(OnOriginalImageGathered);
-
-                tasks.Add(Task.Run((Func<Task>)searcher.Run));
-            }
-            await Task.WhenAll(tasks);
         }
 
-        private void OnOriginalImageGathered(EventPattern<ImageSearchedEventArgs> args)
+        public ObservableCollection<string> OriginalImagePaths
         {
-            var msg = args.EventArgs.ProcessingRequestMessage;
-            Trace.TraceInformation("Original images have been gathered for: {0}", msg.Keyword);
-
-            var keywordIndex =
-                PostedKeywords.TakeWhile(
-                    kwd => !string.Equals(kwd.Value, msg.Keyword, StringComparison.OrdinalIgnoreCase)).Count();
-            PostedKeywords.RemoveAt(keywordIndex);
-
-            ProcessingRequestMessages.Add(args.EventArgs.ProcessingRequestMessage);
+            get { return _originalImagePaths; }
         }
 
-        public ObservableCollection<ProcessingRequestMessage> ProcessingRequestMessages
+        private void OriginalImagePathsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            get { return _processingRequestMessages; }
-        }
-
-        private void ProcessingRequestMessagesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            RefreshOriginalImageCount();
             ClearOriginalImagesCommand.RaiseCanExecuteChanged();
             StartProcessingCommand.RaiseCanExecuteChanged();
         }
@@ -275,36 +322,28 @@ namespace ImageProcessor.Admin.ViewModels
             set { _imageSearcherThreadCount = value; }
         }
 
-        public int OriginalImageCount
+        public int ImageRetrieverThreadCount
         {
-            get { return _originalImageCount; }
-            private set
-            {
-                Set(() => OriginalImageCount, ref _originalImageCount, value);
-            }
-        }
-
-        private void RefreshOriginalImageCount()
-        {
-            OriginalImageCount = ProcessingRequestMessages.SelectMany(reqMsg => reqMsg.FileNames).Count();
+            get { return _imageRetrieverThreadCount; }
+            set { _imageRetrieverThreadCount = value; }
         }
 
         public RelayCommand ClearOriginalImagesCommand { get; private set; }
 
         private void ClearOriginalImages()
         {
-            foreach (var fileName in _processingRequestMessages.SelectMany(reqMsg => reqMsg.FileNames))
+            foreach (var path in _originalImagePaths)
             {
                 try
                 {
-                    File.Delete(fileName);
+                    File.Delete(path);
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceError("An error occurred when deleting an original image file {0}: {1}", fileName, ex);
+                    Trace.TraceError("An error occurred when deleting an original image file {0}: {1}", path, ex);
                 }
             }
-            _processingRequestMessages.Clear();
+            _originalImagePaths.Clear();
         }
 
         #endregion Search
@@ -340,16 +379,16 @@ namespace ImageProcessor.Admin.ViewModels
         {
             await Task.Run(async () =>
             {
-                foreach (var fileName in ProcessingRequestMessages.SelectMany(reqMsg => reqMsg.FileNames))
+                foreach (var orgImgFilePath in OriginalImagePaths)
                 {
                     try
                     {
-                        var resultFileName = await Models.ImageProcessor.ProcessAsync(fileName);
-                        DispatcherHelper.CheckBeginInvokeOnUI(() => _resultImagePaths.Add(resultFileName));
+                        var resultImgFilePath = await Models.ImageProcessor.ProcessAsync(orgImgFilePath);
+                        DispatcherHelper.CheckBeginInvokeOnUI(() => _resultImagePaths.Add(resultImgFilePath));
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceError("An error occurred when processing {0}: {1}", fileName, ex);
+                        Trace.TraceError("An error occurred when processing {0}: {1}", orgImgFilePath, ex);
                     }
                 }
             });
@@ -359,9 +398,9 @@ namespace ImageProcessor.Admin.ViewModels
         {
             // Channel of Producer-Consumer pattern
             var channel = new BlockingCollection<string>();
-            foreach (var fileName in ProcessingRequestMessages.SelectMany(reqMsg => reqMsg.FileNames))
+            foreach (var orgImgFilePath in OriginalImagePaths)
             {
-                channel.Add(fileName);
+                channel.Add(orgImgFilePath);
             }
             channel.CompleteAdding();
 
@@ -436,6 +475,7 @@ namespace ImageProcessor.Admin.ViewModels
 
         private void ClearResultImages()
         {
+            ProcessingMilliseconds = 0;
             foreach (var resultImagePath in _resultImagePaths)
             {
                 try

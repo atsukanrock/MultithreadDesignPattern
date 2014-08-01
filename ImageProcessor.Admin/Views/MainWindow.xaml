@@ -18,13 +18,14 @@
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="3*" />
+            <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
         <GroupBox Header="キーワード">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -38,11 +39,9 @@
                                 VerticalAlignment="Center" Margin="10,10,0,10" />
                         <Button Content="取得停止" Command="{Binding StopReceivingKeywordsCommand}"
                                 VerticalAlignment="Center" Margin="10,10,0,10" />
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <TextBlock Text="溜まったフォース (キーワード) :" VerticalAlignment="Center" Margin="0,10,10,10" />
+                        <TextBlock Text="溜まったフォース (キーワード) :" VerticalAlignment="Center" Margin="40,10,0,10" />
                         <TextBlock Text="{Binding PostedKeywords.Count}" FontSize="{Binding KeywordCountFontSize}"
-                                   VerticalAlignment="Center" Margin="0,10,10,10" />
+                                   VerticalAlignment="Center" Margin="10,10,0,10" />
                     </StackPanel>
                 </Grid>
                 <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
@@ -65,9 +64,14 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="クリア" Command="{Binding ClearKeywordsCommand}" VerticalAlignment="Center"
+                            Margin="0,10,10,10" />
+                </StackPanel>
             </Grid>
         </GroupBox>
-        <GroupBox Header="オリジナル画像" Grid.Row="1" IsEnabled="{Binding Connection, Converter={StaticResource NullToBooleanConverter}, ConverterParameter=true}">
+        <GroupBox Header="オリジナル画像" Grid.Row="1"
+                  IsEnabled="{Binding Connection, Converter={StaticResource NullToBooleanConverter}, ConverterParameter=true}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
@@ -80,12 +84,17 @@
                     <controls:NumericUpDown Value="{Binding ImagesPerKeyword}" Minimum="1.0" Maximum="255"
                                             Interval="1.0"
                                             Width="80" VerticalAlignment="Center" Margin="10,10,0,10" />
-                    <TextBlock Text="収集スレッド数:" VerticalAlignment="Center" Margin="40,10,0,10" />
+                    <TextBlock Text="検索スレッド数:" VerticalAlignment="Center" Margin="40,10,0,10" />
                     <controls:NumericUpDown Value="{Binding ImageSearcherThreadCount}" Minimum="1.0" Maximum="255"
                                             Interval="1.0"
                                             Width="80" VerticalAlignment="Center" Margin="10,10,0,10" />
+                    <TextBlock Text="ダウンロードスレッド数:" VerticalAlignment="Center" Margin="40,10,0,10" />
+                    <controls:NumericUpDown Value="{Binding ImageRetrieverThreadCount}" Minimum="1.0" Maximum="255"
+                                            Interval="1.0"
+                                            Width="80" VerticalAlignment="Center" Margin="10,10,0,10" />
                     <TextBlock Text="収集された画像数:" VerticalAlignment="Center" Margin="40,10,0,10" />
-                    <TextBlock Text="{Binding OriginalImageCount, StringFormat='#,##0'}" VerticalAlignment="Center"
+                    <TextBlock Text="{Binding OriginalImagePaths.Count, StringFormat='#,##0'}"
+                               VerticalAlignment="Center"
                                Margin="10,10,0,10" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -94,7 +103,8 @@
                 </StackPanel>
             </Grid>
         </GroupBox>
-        <GroupBox Header="画像変換" Grid.Row="2" IsEnabled="{Binding Connection, Converter={StaticResource NullToBooleanConverter}, ConverterParameter=true}">
+        <GroupBox Header="画像変換" Grid.Row="2"
+                  IsEnabled="{Binding Connection, Converter={StaticResource NullToBooleanConverter}, ConverterParameter=true}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -114,6 +124,9 @@
                                                 Interval="1.0" Width="80" VerticalAlignment="Center"
                                                 Margin="10,10,0,10" />
                     </StackPanel>
+                    <TextBlock Text="処理された画像数:" VerticalAlignment="Center" Margin="40,10,0,10" />
+                    <TextBlock Text="{Binding ResultImagePaths.Count, StringFormat='#,##0'}" VerticalAlignment="Center"
+                               Margin="10,10,0,10" />
                     <TextBlock Text="処理時間:" VerticalAlignment="Center" Margin="40,10,0,10" />
                     <TextBlock Text="{Binding ProcessingMilliseconds, StringFormat='#,##0'}" Width="50"
                                TextAlignment="Right" VerticalAlignment="Center" Margin="10,10,0,10" />
