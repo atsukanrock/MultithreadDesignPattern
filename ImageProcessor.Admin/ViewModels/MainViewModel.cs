@@ -1,25 +1,38 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Threading;
+using ImageProcessor.Admin.Models;
 using ImageProcessor.Admin.Properties;
+using ImageProcessor.Storage.Queue.Messages;
 using Microsoft.AspNet.SignalR.Client;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Queue;
+using Newtonsoft.Json;
 
 namespace ImageProcessor.Admin.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
+        private bool _azureStorageObjectsInitialized;
+        private CloudBlobContainer _originalImagesBlobContainer;
+        private CloudQueue _simpleWorkerRequestQueue;
+        private CloudQueue _multithreadWorkerRequestQueue;
+
         #region Property backing fields
 
         private IDisposable _connection;
@@ -31,6 +44,9 @@ namespace ImageProcessor.Admin.ViewModels
         private readonly ObservableCollection<KeywordViewModel> _postedKeywords =
             new ObservableCollection<KeywordViewModel>();
 
+        private readonly ObservableCollection<ProcessingRequestMessage> _processingRequestMessages =
+            new ObservableCollection<ProcessingRequestMessage>();
+
         #endregion Property backing fields
 
         public MainViewModel()
@@ -39,9 +55,11 @@ namespace ImageProcessor.Admin.ViewModels
 
             StartReceivingKeywordsCommand = new RelayCommand(StartReceivingKeywords, () => Connection == null);
             StopReceivingKeywordsCommand = new RelayCommand(StopReceivingKeywords, () => Connection != null);
-            StartProcessingCommand = new RelayCommand(StartProcessing, () => PostedKeywords.Any());
+            GatherOriginalImagesCommand = new RelayCommand(GatherOriginalImages, () => PostedKeywords.Any());
+            StartProcessingCommand = new RelayCommand(StartProcessing, () => ProcessingRequestMessages.Any());
 
             _postedKeywords.CollectionChanged += PostedKeywordsOnCollectionChanged;
+            _processingRequestMessages.CollectionChanged += ProcessingRequestMessagesOnCollectionChanged;
 
             if (IsInDesignMode)
             {
@@ -51,6 +69,16 @@ namespace ImageProcessor.Admin.ViewModels
                 _postedKeywords.ElementAt(1).NotifyPosted();
                 _postedKeywords.ElementAt(1).NotifyPosted();
             }
+#if DEBUG
+            else
+            {
+                _postedKeywords.Add(new KeywordViewModel("ジョジョの奇妙な冒険"));
+                _postedKeywords.Add(new KeywordViewModel("dirk nowitzki"));
+                _postedKeywords.Add(new KeywordViewModel("超サイヤ人"));
+                _postedKeywords.ElementAt(1).NotifyPosted();
+                _postedKeywords.ElementAt(1).NotifyPosted();
+            }
+#endif
         }
 
         private IDisposable Connection
@@ -156,23 +184,94 @@ namespace ImageProcessor.Admin.ViewModels
             StartProcessingCommand.RaiseCanExecuteChanged();
         }
 
+        public RelayCommand GatherOriginalImagesCommand { get; private set; }
+
+        private async void GatherOriginalImages()
+        {
+            ProcessingRequestMessages.Clear();
+
+            // Channel of Producer-Consumer pattern
+            var channel = new BlockingCollection<string>();
+            foreach (var keyword in PostedKeywords.ToArray())
+            {
+                channel.Add(keyword.Value);
+            }
+            channel.CompleteAdding();
+
+            await EnsureCloudStorage();
+            var tasks = new List<Task>();
+            // in order to restrict the number of concurrent accesses
+            for (int i = 0; i < 5; i++)
+            {
+                var gatherer = new OriginalImageGatherer(channel, _originalImagesBlobContainer);
+                Observable.FromEventPattern<OriginalImageGatheredEventArgs>(eh => gatherer.OriginalImageGathered += eh,
+                                                                            eh => gatherer.OriginalImageGathered -= eh)
+                          .ObserveOnDispatcher()
+                          .Subscribe(OnOriginalImageGathered);
+
+                tasks.Add(gatherer.Run());
+            }
+            await Task.WhenAll(tasks);
+        }
+
+        private void OnOriginalImageGathered(EventPattern<OriginalImageGatheredEventArgs> args)
+        {
+            var msg = args.EventArgs.ProcessingRequestMessage;
+            Trace.TraceInformation("Original images have been gathered for: {0}", msg.Keyword);
+
+            var keywordIndex =
+                PostedKeywords.TakeWhile(
+                    kwd => !string.Equals(kwd.Value, msg.Keyword, StringComparison.OrdinalIgnoreCase)).Count();
+            PostedKeywords.RemoveAt(keywordIndex);
+
+            ProcessingRequestMessages.Add(args.EventArgs.ProcessingRequestMessage);
+        }
+
+        public ObservableCollection<ProcessingRequestMessage> ProcessingRequestMessages
+        {
+            get { return _processingRequestMessages; }
+        }
+
+        private void ProcessingRequestMessagesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            StartProcessingCommand.RaiseCanExecuteChanged();
+        }
+
         public RelayCommand StartProcessingCommand { get; private set; }
 
         private async void StartProcessing()
         {
-            // TODO: If connection is open, close
+            await EnsureCloudStorage();
+            foreach (var requestMessage in ProcessingRequestMessages)
+            {
+                var reqMsgJson = JsonConvert.SerializeObject(requestMessage);
+                await _simpleWorkerRequestQueue.AddMessageAsync(new CloudQueueMessage(reqMsgJson));
+                await _multithreadWorkerRequestQueue.AddMessageAsync(new CloudQueueMessage(reqMsgJson));
+            }
+            ProcessingRequestMessages.Clear();
+        }
+
+        private async Task EnsureCloudStorage()
+        {
+            if (_azureStorageObjectsInitialized) return;
 
             var storageAccount = CloudStorageAccount.Parse(Settings.Default.StorageConnectionString);
 
-            var queueClient = storageAccount.CreateCloudQueueClient();
-            var keywordsQueue = queueClient.GetQueueReference("keywords");
-            await keywordsQueue.CreateIfNotExistsAsync();
+            Trace.TraceInformation("Creating original images blob container");
+            var blobClient = storageAccount.CreateCloudBlobClient();
+            _originalImagesBlobContainer = blobClient.GetContainerReference("original-images");
+            await _originalImagesBlobContainer.CreateIfNotExistsAsync();
 
-            foreach (var keyword in PostedKeywords)
-            {
-                await keywordsQueue.AddMessageAsync(new CloudQueueMessage(keyword.Value));
-            }
-            PostedKeywords.Clear();
+            Trace.TraceInformation("Creating simple worker request queue");
+            var queueClient = storageAccount.CreateCloudQueueClient();
+            _simpleWorkerRequestQueue = queueClient.GetQueueReference("simple-worker-requests");
+            await _simpleWorkerRequestQueue.CreateIfNotExistsAsync();
+
+            Trace.TraceInformation("Creating multi-thread worker request queue");
+            _multithreadWorkerRequestQueue = queueClient.GetQueueReference("multithread-worker-requests");
+            await _multithreadWorkerRequestQueue.CreateIfNotExistsAsync();
+
+            _azureStorageObjectsInitialized = true;
         }
     }
 }

@@ -5,7 +5,15 @@
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
       <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.Enabled" value="true" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.AccountUsername" value="atsushi.kambara" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.AccountEncryptedPassword" value="MIIBpgYJKoZIhvcNAQcDoIIBlzCCAZMCAQAxggFPMIIBSwIBADAzMB8xHTAbBgNVBAMTFEFLSU1HUFJPQyBNYW5hZ2VtZW50AhDjhu9KYA3Jt04p9sfumE0ZMA0GCSqGSIb3DQEBAQUABIIBAGxMMo9JNyz+PILFsU5YXaLyo3plbPY8WWUjYJVl+Ev2KIjm9WRnBnaeCvKDaXOe3B/9H+8PVzDSugaTzIfvjXCEDgF86JNsgYGmDPx8PsLj1dNqBjeXTBqMmkkFJJEM9WJ1HW4nzogx2T1B4B8eGVBQJBZkpr/ZM7AViGsCpo5OWC9lJFjUmgisKnv/jhrZ+y8bcjkcsFd+2LHLCY+HA8Jmb25eG49xrymSE1JMkDeEjzpTfKdtOcgX5ZCFn3/3AeIyiixVLQh6tAtuG0Ml+0QXfOeeaMYLi3pyjSVzGTsuhiuI3iwouP34J/J+FcikznKwhiYXGZAAaGd1SWnyh+YwOwYJKoZIhvcNAQcBMBQGCCqGSIb3DQMHBAh8PzXqBgkWmIAYbiv6JKwD0CZyIKyTOGtqBMpfs4b6JfRN" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.AccountExpiration" value="2015-08-01T23:59:59.0000000+09:00" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteForwarder.Enabled" value="true" />
     </ConfigurationSettings>
+    <Certificates>
+      <Certificate name="Microsoft.WindowsAzure.Plugins.RemoteAccess.PasswordEncryption" thumbprint="B4B00FBE70813846C9D761AE8B0BD9A635DB65CB" thumbprintAlgorithm="sha1" />
+    </Certificates>
   </Role>
   <Role name="ImageProcessor.MultithreadWorker">
     <Instances count="1" />
@@ -14,20 +22,26 @@
       <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
       <Setting name="ConsumerThreadCount" value="10" />
       <Setting name="ChannelCapacity" value="10" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.Enabled" value="true" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.AccountUsername" value="atsushi.kambara" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.AccountEncryptedPassword" value="MIIBpgYJKoZIhvcNAQcDoIIBlzCCAZMCAQAxggFPMIIBSwIBADAzMB8xHTAbBgNVBAMTFEFLSU1HUFJPQyBNYW5hZ2VtZW50AhDjhu9KYA3Jt04p9sfumE0ZMA0GCSqGSIb3DQEBAQUABIIBAGxMMo9JNyz+PILFsU5YXaLyo3plbPY8WWUjYJVl+Ev2KIjm9WRnBnaeCvKDaXOe3B/9H+8PVzDSugaTzIfvjXCEDgF86JNsgYGmDPx8PsLj1dNqBjeXTBqMmkkFJJEM9WJ1HW4nzogx2T1B4B8eGVBQJBZkpr/ZM7AViGsCpo5OWC9lJFjUmgisKnv/jhrZ+y8bcjkcsFd+2LHLCY+HA8Jmb25eG49xrymSE1JMkDeEjzpTfKdtOcgX5ZCFn3/3AeIyiixVLQh6tAtuG0Ml+0QXfOeeaMYLi3pyjSVzGTsuhiuI3iwouP34J/J+FcikznKwhiYXGZAAaGd1SWnyh+YwOwYJKoZIhvcNAQcBMBQGCCqGSIb3DQMHBAh8PzXqBgkWmIAYbiv6JKwD0CZyIKyTOGtqBMpfs4b6JfRN" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.AccountExpiration" value="2015-08-01T23:59:59.0000000+09:00" />
     </ConfigurationSettings>
+    <Certificates>
+      <Certificate name="Microsoft.WindowsAzure.Plugins.RemoteAccess.PasswordEncryption" thumbprint="B4B00FBE70813846C9D761AE8B0BD9A635DB65CB" thumbprintAlgorithm="sha1" />
+    </Certificates>
   </Role>
   <Role name="ImageProcessor.Web">
     <Instances count="1" />
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.Enabled" value="true" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.AccountUsername" value="atsushi.kambara" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.AccountEncryptedPassword" value="MIIBpgYJKoZIhvcNAQcDoIIBlzCCAZMCAQAxggFPMIIBSwIBADAzMB8xHTAbBgNVBAMTFEFLSU1HUFJPQyBNYW5hZ2VtZW50AhDjhu9KYA3Jt04p9sfumE0ZMA0GCSqGSIb3DQEBAQUABIIBAGxMMo9JNyz+PILFsU5YXaLyo3plbPY8WWUjYJVl+Ev2KIjm9WRnBnaeCvKDaXOe3B/9H+8PVzDSugaTzIfvjXCEDgF86JNsgYGmDPx8PsLj1dNqBjeXTBqMmkkFJJEM9WJ1HW4nzogx2T1B4B8eGVBQJBZkpr/ZM7AViGsCpo5OWC9lJFjUmgisKnv/jhrZ+y8bcjkcsFd+2LHLCY+HA8Jmb25eG49xrymSE1JMkDeEjzpTfKdtOcgX5ZCFn3/3AeIyiixVLQh6tAtuG0Ml+0QXfOeeaMYLi3pyjSVzGTsuhiuI3iwouP34J/J+FcikznKwhiYXGZAAaGd1SWnyh+YwOwYJKoZIhvcNAQcBMBQGCCqGSIb3DQMHBAh8PzXqBgkWmIAYbiv6JKwD0CZyIKyTOGtqBMpfs4b6JfRN" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.RemoteAccess.AccountExpiration" value="2015-08-01T23:59:59.0000000+09:00" />
     </ConfigurationSettings>
-  </Role>
-  <Role name="ImageProcessor.SearchWorker">
-    <Instances count="1" />
-    <ConfigurationSettings>
-      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
-      <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
-      <Setting name="AzureMarketplaceAccountKey" value="" />
-    </ConfigurationSettings>
+    <Certificates>
+      <Certificate name="Microsoft.WindowsAzure.Plugins.RemoteAccess.PasswordEncryption" thumbprint="B4B00FBE70813846C9D761AE8B0BD9A635DB65CB" thumbprintAlgorithm="sha1" />
+    </Certificates>
   </Role>
 </ServiceConfiguration>

@@ -2,17 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using ImageProcessor.Storage.Queue.Messages;
 using ImageSearchTest.Bing.ResultObjects;
+using Microsoft.WindowsAzure.Diagnostics;
 using Microsoft.WindowsAzure.ServiceRuntime;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
+using LogLevel = Microsoft.WindowsAzure.Diagnostics.LogLevel;
 
 namespace ImageProcessor.SearchWorker
 {
@@ -31,6 +33,7 @@ namespace ImageProcessor.SearchWorker
             while (true)
             {
                 CloudQueueMessage msg = null;
+                bool error = false;
                 try
                 {
                     // Retrieve a new message from the queue.
@@ -45,7 +48,7 @@ namespace ImageProcessor.SearchWorker
                     }
                     else
                     {
-                        Thread.Sleep(1000);
+                        await Task.Delay(1000);
                     }
                 }
                 catch (StorageException e)
@@ -56,7 +59,17 @@ namespace ImageProcessor.SearchWorker
                         Trace.TraceError("Deleting poison queue item: '{0}'", msg.AsString);
                     }
                     Trace.TraceError("Exception in SearchWorker: '{0}'", e.Message);
-                    Thread.Sleep(5000);
+                    error = true;
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError("Exception in SearchWorker: {0}", ex);
+                    error = true;
+                }
+
+                if (error)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5.0));
                 }
             }
         }
@@ -67,6 +80,10 @@ namespace ImageProcessor.SearchWorker
 
             var kwd = message.AsString;
             var contents = await SearchAsync(kwd);
+            if (contents == null)
+            {
+                return;
+            }
             var fileNames = await AddOriginalImagesToBlob(contents);
             await NotifySearchResultToProcessingWorkersAsync(kwd, fileNames);
 
@@ -84,14 +101,31 @@ namespace ImageProcessor.SearchWorker
             var accountKey = RoleEnvironment.GetConfigurationSettingValue("AzureMarketplaceAccountKey");
             var httpClientHandler = new HttpClientHandler {Credentials = new NetworkCredential(accountKey, accountKey)};
             var httpClient = new HttpClient(httpClientHandler);
-            var response = await httpClient.GetStringAsync("https://api.datamarket.azure.com/Bing/Search/Image" +
-                                                           "?Query='" + escapedSearchWord + "'" +
-                                                           "&Market='" + market + "'" +
-                                                           "&Adult='" + adult + "'" +
-                                                           "&$top=" + top +
-                                                           "&$format=" + format);
+            var searchUri = "https://api.datamarket.azure.com/Bing/Search/Image" +
+                            "?Query='" + escapedSearchWord + "'" +
+                            "&Market='" + market + "'" +
+                            "&Adult='" + adult + "'" +
+                            "&$top=" + top +
+                            "&$format=" + format;
 
-            var unescapedResponse = Uri.UnescapeDataString(response);
+            HttpResponseMessage response;
+            try
+            {
+                Trace.TraceInformation("Searching: {0}", searchUri);
+                response = await httpClient.GetAsync(searchUri);
+                Trace.TraceInformation("Response status code for search: {0}", response.StatusCode);
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("An error occurred while searching images for {0}: {1}", searchWord, ex);
+                return null;
+            }
+
+            var unescapedResponse = Uri.UnescapeDataString(await response.Content.ReadAsStringAsync());
             var contents = JsonConvert.DeserializeObject<ImageSearchObject>(unescapedResponse);
             return contents;
         }
@@ -100,36 +134,45 @@ namespace ImageProcessor.SearchWorker
         {
             var fileNames = new List<string>();
 
-            var httpClient = new HttpClient();
             foreach (var result in contents.d.results)
             {
                 var imageUri = new Uri(result.MediaUrl);
                 HttpResponseMessage response;
                 try
                 {
+                    var httpClient = new HttpClient();
+                    Trace.TraceInformation("Retrieving an image: {0}", imageUri);
                     response = await httpClient.GetAsync(imageUri);
+                    Trace.TraceInformation("Response status code for retrieving an image: {0}", response.StatusCode);
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
-                        // TODO: Handle error status code
                         continue;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceWarning("An error occurred while retrieving an image: {0}", ex);
+                    Trace.TraceError("An error occurred while retrieving an image ({0}): {1}", imageUri, ex);
                     continue;
                 }
 
                 var originalExtension = Path.GetExtension(imageUri.AbsolutePath);
                 var fileName = Guid.NewGuid().ToString("N") + originalExtension;
 
-                var blob = _originalImagesBlobContainer.GetBlockBlobReference(fileName);
-                blob.Properties.ContentType = result.ContentType;
-                using (var blobStream = await blob.OpenWriteAsync())
+                try
                 {
-                    await response.Content.CopyToAsync(blobStream);
+                    var blob = _originalImagesBlobContainer.GetBlockBlobReference(fileName);
+                    blob.Properties.ContentType = result.ContentType;
+                    using (var blobStream = await blob.OpenWriteAsync())
+                    {
+                        await response.Content.CopyToAsync(blobStream);
+                    }
+                    Trace.TraceInformation("An image has been saved: {0}", blob.Uri.AbsoluteUri);
                 }
-                Trace.TraceInformation("An image has been saved: {0}", blob.Uri.AbsoluteUri);
+                catch (Exception ex)
+                {
+                    Trace.TraceError("An error occurred while saving an image: {0}", ex);
+                    continue;
+                }
 
                 fileNames.Add(fileName);
             }
@@ -143,8 +186,15 @@ namespace ImageProcessor.SearchWorker
             var msgJson = JsonConvert.SerializeObject(msgObj);
             var queueMsg = new CloudQueueMessage(msgJson);
 
-            await _simpleWorkerRequestQueue.AddMessageAsync(queueMsg);
-            await _multithreadWorkerRequestQueue.AddMessageAsync(queueMsg);
+            try
+            {
+                await _simpleWorkerRequestQueue.AddMessageAsync(queueMsg);
+                await _multithreadWorkerRequestQueue.AddMessageAsync(queueMsg);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("An error occurred while adding a message to a queue: {0}", ex);
+            }
         }
 
         public override bool OnStart()
@@ -152,8 +202,15 @@ namespace ImageProcessor.SearchWorker
             // Set the maximum number of concurrent connections 
             ServicePointManager.DefaultConnectionLimit = 12;
 
+            var config = DiagnosticMonitor.GetDefaultInitialConfiguration();
+            config.Logs.ScheduledTransferPeriod = TimeSpan.FromMinutes(1.0);
+            config.Logs.ScheduledTransferLogLevelFilter = LogLevel.Information;
+            config.Logs.BufferQuotaInMB = 500;
+            DiagnosticMonitor.Start("Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString", config);
+
             // For information on handling configuration changes
             // see the MSDN topic at http://go.microsoft.com/fwlink/?LinkId=166357.
+            RoleEnvironment.Changing += RoleEnvironmentOnChanging;
 
             // Open storage account using credentials from .cscfg file.
             var storageAccount = CloudStorageAccount.Parse(
@@ -178,6 +235,15 @@ namespace ImageProcessor.SearchWorker
             _multithreadWorkerRequestQueue.CreateIfNotExists();
 
             return base.OnStart();
+        }
+
+        private void RoleEnvironmentOnChanging(object sender, RoleEnvironmentChangingEventArgs e)
+        {
+            // If the configuration setting(s) is changed, restart this role instance.
+            if (e.Changes.Any(change => change is RoleEnvironmentConfigurationSettingChange))
+            {
+                e.Cancel = true;
+            }
         }
     }
 }

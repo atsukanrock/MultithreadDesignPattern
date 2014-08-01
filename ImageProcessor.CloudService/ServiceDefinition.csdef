@@ -3,6 +3,8 @@
   <WorkerRole name="ImageProcessor.SimpleWorker" vmsize="ExtraSmall">
     <Imports>
       <Import moduleName="Diagnostics" />
+      <Import moduleName="RemoteAccess" />
+      <Import moduleName="RemoteForwarder" />
     </Imports>
     <ConfigurationSettings>
       <Setting name="StorageConnectionString" />
@@ -11,6 +13,7 @@
   <WorkerRole name="ImageProcessor.MultithreadWorker" vmsize="ExtraSmall">
     <Imports>
       <Import moduleName="Diagnostics" />
+      <Import moduleName="RemoteAccess" />
     </Imports>
     <ConfigurationSettings>
       <Setting name="StorageConnectionString" />
@@ -31,15 +34,7 @@
     </Endpoints>
     <Imports>
       <Import moduleName="Diagnostics" />
+      <Import moduleName="RemoteAccess" />
     </Imports>
   </WebRole>
-  <WorkerRole name="ImageProcessor.SearchWorker" vmsize="ExtraSmall">
-    <Imports>
-      <Import moduleName="Diagnostics" />
-    </Imports>
-    <ConfigurationSettings>
-      <Setting name="StorageConnectionString" />
-      <Setting name="AzureMarketplaceAccountKey" />
-    </ConfigurationSettings>
-  </WorkerRole>
 </ServiceDefinition>
