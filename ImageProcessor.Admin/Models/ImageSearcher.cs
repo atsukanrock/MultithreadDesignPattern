@@ -30,7 +30,7 @@ namespace ImageProcessor.Admin.Models
         {
             var escapedKeyword = Uri.EscapeDataString(keyword);
             const string market = "ja-JP";
-            const string adult = "Off"; // Adult filter: Off / Moderate / Strict
+            const string adult = "Strict"; // Adult filter: Off / Moderate / Strict
             //const int top = 5; // How many numbers of images do I want? default: 50
             const string format = "json"; // xml (ATOM) / json
 

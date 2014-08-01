@@ -279,7 +279,7 @@ namespace ImageProcessor.Admin.ViewModels
                                   }
                               });
 
-                    searcherTasks.Add(Task.Run((Func<Task>)searcher.Run));
+                    searcherTasks.Add(Task.Run(async () => await searcher.Run()));
                 }
 
                 var retrieverTasks = new List<Task>();
@@ -291,7 +291,7 @@ namespace ImageProcessor.Admin.ViewModels
                               .ObserveOnDispatcher()
                               .Subscribe(args => OriginalImagePaths.Add(args.EventArgs.TemporaryFilePath));
 
-                    retrieverTasks.Add(Task.Run((Func<Task>)searcher.Run));
+                    retrieverTasks.Add(Task.Run(async () => await searcher.Run()));
                 }
 
                 await Task.WhenAll(searcherTasks);
@@ -413,7 +413,7 @@ namespace ImageProcessor.Admin.ViewModels
                           .ObserveOnDispatcher()
                           .Subscribe(OnImageProcessed);
 
-                tasks.Add(Task.Run((Func<Task>)processor.Run));
+                tasks.Add(Task.Run(async () => await processor.Run()));
             }
             await Task.WhenAll(tasks);
         }
