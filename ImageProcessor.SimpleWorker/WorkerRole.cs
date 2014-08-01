@@ -1,16 +1,19 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using ImageProcessor.Imaging.Filters;
 using ImageProcessor.Storage.Queue.Messages;
+using Microsoft.WindowsAzure.Diagnostics;
 using Microsoft.WindowsAzure.ServiceRuntime;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
+using LogLevel = Microsoft.WindowsAzure.Diagnostics.LogLevel;
 
 namespace ImageProcessor.SimpleWorker
 {
@@ -42,17 +45,17 @@ namespace ImageProcessor.SimpleWorker
                     }
                     else
                     {
-                        Thread.Sleep(1000);
+                        await Task.Delay(1000);
                     }
                 }
-                catch (StorageException e)
+                catch (Exception ex)
                 {
                     if (reqMsg != null && reqMsg.DequeueCount > 5)
                     {
                         _requestQueue.DeleteMessage(reqMsg);
                         Trace.TraceError("Deleting poison queue item: '{0}'", reqMsg.AsString);
                     }
-                    Trace.TraceError("Exception in SimpleWorker: '{0}'", e.Message);
+                    Trace.TraceError("Exception in SimpleWorker: '{0}'", ex);
                     Thread.Sleep(5000);
                 }
             }
@@ -95,31 +98,49 @@ namespace ImageProcessor.SimpleWorker
 
         public override bool OnStart()
         {
+            Trace.TraceInformation("ImageProcessor.SimpleWorker OnStart called");
+
             // Set the maximum number of concurrent connections 
             ServicePointManager.DefaultConnectionLimit = 12;
 
+            var config = DiagnosticMonitor.GetDefaultInitialConfiguration();
+            config.Logs.ScheduledTransferPeriod = TimeSpan.FromMinutes(1.0);
+            config.Logs.ScheduledTransferLogLevelFilter = LogLevel.Information;
+            config.Logs.BufferQuotaInMB = 500;
+            DiagnosticMonitor.Start("Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString", config);
+
             // For information on handling configuration changes
             // see the MSDN topic at http://go.microsoft.com/fwlink/?LinkId=166357.
+            RoleEnvironment.Changing += RoleEnvironmentOnChanging;
 
             // Open storage account using credentials from .cscfg file.
-            var storageAccount = CloudStorageAccount.Parse
-                (RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
+            var storageAccount = CloudStorageAccount.Parse(
+                RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
 
-            Trace.TraceInformation("Creating request queue");
+            //Trace.TraceInformation("Creating request queue");
             var queueClient = storageAccount.CreateCloudQueueClient();
             _requestQueue = queueClient.GetQueueReference("simple-worker-requests");
             _requestQueue.CreateIfNotExists();
 
-            Trace.TraceInformation("Creating original images blob container");
+            //Trace.TraceInformation("Creating original images blob container");
             var blobClient = storageAccount.CreateCloudBlobClient();
             _originalImagesBlobContainer = blobClient.GetContainerReference("original-images");
             _originalImagesBlobContainer.CreateIfNotExists();
 
-            Trace.TraceInformation("Creating result images blob container");
+            //Trace.TraceInformation("Creating result images blob container");
             _resultImagesBlobContainer = blobClient.GetContainerReference("simple-result-images");
             _resultImagesBlobContainer.CreateIfNotExists();
 
             return base.OnStart();
+        }
+
+        private void RoleEnvironmentOnChanging(object sender, RoleEnvironmentChangingEventArgs e)
+        {
+            // If the configuration setting(s) is changed, restart this role instance.
+            if (e.Changes.Any(change => change is RoleEnvironmentConfigurationSettingChange))
+            {
+                e.Cancel = true;
+            }
         }
     }
 }

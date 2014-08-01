@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using ImageProcessor.Storage.Queue.Messages;
 using ImageSearchTest.Bing.ResultObjects;
@@ -33,7 +34,6 @@ namespace ImageProcessor.SearchWorker
             while (true)
             {
                 CloudQueueMessage msg = null;
-                bool error = false;
                 try
                 {
                     // Retrieve a new message from the queue.
@@ -51,25 +51,15 @@ namespace ImageProcessor.SearchWorker
                         await Task.Delay(1000);
                     }
                 }
-                catch (StorageException e)
+                catch (Exception ex)
                 {
                     if (msg != null && msg.DequeueCount > 5)
                     {
                         _keywordsQueue.DeleteMessage(msg);
                         Trace.TraceError("Deleting poison queue item: '{0}'", msg.AsString);
                     }
-                    Trace.TraceError("Exception in SearchWorker: '{0}'", e.Message);
-                    error = true;
-                }
-                catch (Exception ex)
-                {
-                    Trace.TraceError("Exception in SearchWorker: {0}", ex);
-                    error = true;
-                }
-
-                if (error)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(5.0));
+                    Trace.TraceError("Exception in SearchWorker: '{0}'", ex);
+                    Thread.Sleep(5000);
                 }
             }
         }
@@ -199,6 +189,8 @@ namespace ImageProcessor.SearchWorker
 
         public override bool OnStart()
         {
+            Trace.TraceInformation("ImageProcessor.SearchWorker OnStart called");
+
             // Set the maximum number of concurrent connections 
             ServicePointManager.DefaultConnectionLimit = 12;
 
@@ -216,21 +208,21 @@ namespace ImageProcessor.SearchWorker
             var storageAccount = CloudStorageAccount.Parse(
                 RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
 
-            Trace.TraceInformation("Creating keywords queue");
+            //Trace.TraceInformation("Creating keywords queue");
             var queueClient = storageAccount.CreateCloudQueueClient();
             _keywordsQueue = queueClient.GetQueueReference("keywords");
             _keywordsQueue.CreateIfNotExists();
 
-            Trace.TraceInformation("Creating original images blob container");
+            //Trace.TraceInformation("Creating original images blob container");
             var blobClient = storageAccount.CreateCloudBlobClient();
             _originalImagesBlobContainer = blobClient.GetContainerReference("original-images");
             _originalImagesBlobContainer.CreateIfNotExists();
 
-            Trace.TraceInformation("Creating simple worker request queue");
+            //Trace.TraceInformation("Creating simple worker request queue");
             _simpleWorkerRequestQueue = queueClient.GetQueueReference("simple-worker-requests");
             _simpleWorkerRequestQueue.CreateIfNotExists();
 
-            Trace.TraceInformation("Creating multi-thread worker request queue");
+            //Trace.TraceInformation("Creating multi-thread worker request queue");
             _multithreadWorkerRequestQueue = queueClient.GetQueueReference("multithread-worker-requests");
             _multithreadWorkerRequestQueue.CreateIfNotExists();
 

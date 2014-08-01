@@ -3,11 +3,11 @@ using ImageProcessor.Storage.Queue.Messages;
 
 namespace ImageProcessor.Admin.Models
 {
-    internal class OriginalImageGatheredEventArgs : EventArgs
+    internal class ImageSearchedEventArgs : EventArgs
     {
         private readonly ProcessingRequestMessage _processingRequestMessage;
 
-        public OriginalImageGatheredEventArgs(ProcessingRequestMessage processingRequestMessage)
+        public ImageSearchedEventArgs(ProcessingRequestMessage processingRequestMessage)
         {
             _processingRequestMessage = processingRequestMessage;
         }

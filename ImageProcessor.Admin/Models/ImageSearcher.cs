@@ -9,25 +9,24 @@ using System.Threading.Tasks;
 using ImageProcessor.Admin.Properties;
 using ImageProcessor.Storage.Queue.Messages;
 using ImageSearchTest.Bing.ResultObjects;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
 
 namespace ImageProcessor.Admin.Models
 {
-    internal class OriginalImageGatherer
+    internal class ImageSearcher
     {
         private readonly BlockingCollection<string> _keywords;
-        private readonly CloudBlobContainer _originalImagesBlobContainer;
+        private readonly int _imagesPerKeyword;
 
-        public OriginalImageGatherer(BlockingCollection<string> keywords, CloudBlobContainer originalImagesBlobContainer)
+        public ImageSearcher(BlockingCollection<string> keywords, int imagesPerKeyword = 3)
         {
             _keywords = keywords;
-            _originalImagesBlobContainer = originalImagesBlobContainer;
+            _imagesPerKeyword = imagesPerKeyword;
         }
 
-        public event EventHandler<OriginalImageGatheredEventArgs> OriginalImageGathered;
+        public event EventHandler<ImageSearchedEventArgs> OriginalImageGathered;
 
-        protected virtual void OnOriginalImageGathered(OriginalImageGatheredEventArgs e)
+        protected virtual void OnOriginalImageGathered(ImageSearchedEventArgs e)
         {
             var handler = OriginalImageGathered;
             if (handler != null) handler(this, e);
@@ -46,24 +45,24 @@ namespace ImageProcessor.Admin.Models
                 ImageSearchObject searchResult;
                 try
                 {
-                    searchResult = await SearchAsync(keyword);
+                    searchResult = await SearchAsync(keyword, _imagesPerKeyword);
                 }
                 catch (Exception ex)
                 {
                     // TODO: Log exception.
-                    Trace.TraceError("An error occurred while retrieving an image: {0}", ex);
+                    Trace.TraceError("An error occurred while searching images: {0}", ex);
                     continue;
                 }
 
-                var fileNames = await Task.WhenAll(searchResult.d.results.Select(AddOriginalImageToBlobAsync));
+                var fileNames = await Task.WhenAll(searchResult.d.results.Select(SaveImageAsync));
 
-                var args = new OriginalImageGatheredEventArgs(
+                var args = new ImageSearchedEventArgs(
                     new ProcessingRequestMessage(keyword, fileNames.Where(fileName => fileName != null)));
                 OnOriginalImageGathered(args);
             }
         }
 
-        private static async Task<ImageSearchObject> SearchAsync(string searchWord, int top = 3)
+        private static async Task<ImageSearchObject> SearchAsync(string searchWord, int top)
         {
             var escapedSearchWord = Uri.EscapeDataString(searchWord);
             const string market = "ja-JP";
@@ -93,18 +92,19 @@ namespace ImageProcessor.Admin.Models
             return contents;
         }
 
-        private async Task<string> AddOriginalImageToBlobAsync(Result result)
+        private async Task<string> SaveImageAsync(Result result)
         {
             var imageUri = new Uri(result.MediaUrl);
-            HttpResponseMessage response;
+            Trace.TraceInformation("Retrieving an image: {0}", imageUri);
+
+            HttpResponseMessage response = null;
             try
             {
-                var httpClient = new HttpClient();
-                Trace.TraceInformation("Retrieving an image: {0}", imageUri);
-                response = await httpClient.GetAsync(imageUri);
+                response = await new HttpClient().GetAsync(imageUri);
                 Trace.TraceInformation("Response status code for retrieving an image: {0}", response.StatusCode);
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
+                    response.Dispose();
                     return null;
                 }
             }
@@ -112,21 +112,20 @@ namespace ImageProcessor.Admin.Models
             {
                 // TODO: Log exception.
                 Trace.TraceError("An error occurred while retrieving an image ({0}): {1}", imageUri, ex);
+                if (response != null)
+                {
+                    response.Dispose();
+                }
                 return null;
             }
 
-            var originalExtension = Path.GetExtension(imageUri.AbsolutePath);
-            var fileName = Guid.NewGuid().ToString("N") + originalExtension;
             try
             {
-                var blob = _originalImagesBlobContainer.GetBlockBlobReference(fileName);
-                blob.Properties.ContentType = result.ContentType;
-                using (var blobStream = await blob.OpenWriteAsync())
+                var fileName = Path.GetTempFileName();
+                using (var stream = File.OpenWrite(fileName))
                 {
-                    await response.Content.CopyToAsync(blobStream);
+                    await response.Content.CopyToAsync(stream);
                 }
-                Trace.TraceInformation("An image has been saved: {0}", blob.Uri.AbsoluteUri);
-
                 return fileName;
             }
             catch (Exception ex)
@@ -134,6 +133,10 @@ namespace ImageProcessor.Admin.Models
                 // TODO: Log exception.
                 Trace.TraceError("An error occurred while saving an image: {0}", ex);
                 return null;
+            }
+            finally
+            {
+                response.Dispose();
             }
         }
     }

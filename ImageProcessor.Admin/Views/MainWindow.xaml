@@ -63,8 +63,14 @@
         </GroupBox>
         <GroupBox Header="オリジナル画像" Grid.Row="1">
             <StackPanel Orientation="Horizontal">
-                <Button Content="収集開始" Command="{Binding GatherOriginalImagesCommand}" VerticalAlignment="Center"
+                <Button Content="収集開始" Command="{Binding SearchImagesCommand}" VerticalAlignment="Center"
                         Margin="10,10,10,10" />
+                <TextBlock Text="1 キーワードあたりの画像数:" VerticalAlignment="Center" Margin="40,10,0,10" />
+                <controls:NumericUpDown Value="{Binding ImagesPerKeyword}" Minimum="1.0" Maximum="255" Interval="1.0"
+                                        Width="80" VerticalAlignment="Center" Margin="10,10,0,10" />
+                <TextBlock Text="収集スレッド数:" VerticalAlignment="Center" Margin="40,10,0,10" />
+                <controls:NumericUpDown Value="{Binding ImageSearcherThreadCount}" Minimum="1.0" Maximum="255" Interval="1.0"
+                                        Width="80" VerticalAlignment="Center" Margin="10,10,0,10" />
             </StackPanel>
         </GroupBox>
         <GroupBox Header="画像変換" Grid.Row="2">
@@ -75,8 +81,36 @@
                 </Grid.RowDefinitions>
                 <StackPanel Orientation="Horizontal">
                     <Button Content="処理開始" Command="{Binding StartProcessingCommand}" VerticalAlignment="Center"
-                            Margin="10,10,10,10" />
+                            Margin="10,10,0,10" />
+                    <RadioButton GroupName="ThreadMode" Content="シングルスレッド" IsChecked="{Binding IsSingleThreadMode}"
+                                 VerticalAlignment="Center" Margin="40,10,0,10" />
+                    <RadioButton GroupName="ThreadMode" Content="マルチスレッド" IsChecked="{Binding IsMultiThreadMode}"
+                                 VerticalAlignment="Center" Margin="20,10,0,10" />
+                    <StackPanel Orientation="Horizontal" IsEnabled="{Binding IsMultiThreadMode, Mode=OneWay}">
+                        <TextBlock Text="スレッド数:" VerticalAlignment="Center" Margin="10,10,0,10" />
+                        <controls:NumericUpDown Value="{Binding ImageProcessorThreadCount}" Minimum="1.0" Maximum="255"
+                                                Interval="1.0" Width="80" VerticalAlignment="Center"
+                                                Margin="10,10,0,10" />
+                    </StackPanel>
+                    <TextBlock Text="処理時間:" VerticalAlignment="Center" Margin="40,10,0,10" />
+                    <TextBlock Text="{Binding ProcessingMilliseconds, StringFormat='#,##0'}" Width="50"
+                               TextAlignment="Right" VerticalAlignment="Center" Margin="10,10,0,10" />
                 </StackPanel>
+                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding ResultImagePaths}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Image Source="{Binding}" Width="150" Height="150" Margin="10,10,0,0"
+                                       Stretch="Uniform" StretchDirection="Both" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </Grid>
         </GroupBox>
     </Grid>

@@ -40,6 +40,9 @@
     <Reference Include="GalaSoft.MvvmLight.Extras">
       <HintPath>..\packages\MvvmLightLibs.4.4.32.1\lib\net45\GalaSoft.MvvmLight.Extras.dll</HintPath>
     </Reference>
+    <Reference Include="ImageProcessor">
+      <HintPath>..\packages\ImageProcessor.1.9.4.0\lib\ImageProcessor.dll</HintPath>
+    </Reference>
     <Reference Include="MahApps.Metro">
       <HintPath>..\packages\MahApps.Metro.0.13.1.0\lib\net45\MahApps.Metro.dll</HintPath>
     </Reference>
@@ -118,8 +121,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Models\OriginalImageGatheredEventArgs.cs" />
-    <Compile Include="Models\OriginalImageGatherer.cs" />
+    <Compile Include="Models\ImageProcessor.cs" />
+    <Compile Include="Models\ImageProcessedEventArgs.cs" />
+    <Compile Include="Models\ImageSearchedEventArgs.cs" />
+    <Compile Include="Models\ImageSearcher.cs" />
     <Compile Include="ViewModels\KeywordViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Views\MainWindow.xaml.cs">
