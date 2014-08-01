@@ -3,11 +3,17 @@
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                       xmlns:viewModels="clr-namespace:ImageProcessor.Admin.ViewModels"
+                      xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
                       Title="Image Processor Admin Tool" Width="1600" Height="900" GlowBrush="Black"
                       WindowStartupLocation="CenterScreen">
     <controls:MetroWindow.DataContext>
         <viewModels:MainViewModel />
     </controls:MetroWindow.DataContext>
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closed">
+            <i:InvokeCommandAction Command="{Binding ClearTemporaryFilesCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />
@@ -61,23 +67,39 @@
                 </ScrollViewer>
             </Grid>
         </GroupBox>
-        <GroupBox Header="オリジナル画像" Grid.Row="1">
-            <StackPanel Orientation="Horizontal">
-                <Button Content="収集開始" Command="{Binding SearchImagesCommand}" VerticalAlignment="Center"
-                        Margin="10,10,10,10" />
-                <TextBlock Text="1 キーワードあたりの画像数:" VerticalAlignment="Center" Margin="40,10,0,10" />
-                <controls:NumericUpDown Value="{Binding ImagesPerKeyword}" Minimum="1.0" Maximum="255" Interval="1.0"
-                                        Width="80" VerticalAlignment="Center" Margin="10,10,0,10" />
-                <TextBlock Text="収集スレッド数:" VerticalAlignment="Center" Margin="40,10,0,10" />
-                <controls:NumericUpDown Value="{Binding ImageSearcherThreadCount}" Minimum="1.0" Maximum="255" Interval="1.0"
-                                        Width="80" VerticalAlignment="Center" Margin="10,10,0,10" />
-            </StackPanel>
+        <GroupBox Header="オリジナル画像" Grid.Row="1" IsEnabled="{Binding Connection, Converter={StaticResource NullToBooleanConverter}, ConverterParameter=true}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="収集開始" Command="{Binding SearchImagesCommand}" VerticalAlignment="Center"
+                            Margin="10,10,10,10" />
+                    <TextBlock Text="1 キーワードあたりの画像数:" VerticalAlignment="Center" Margin="40,10,0,10" />
+                    <controls:NumericUpDown Value="{Binding ImagesPerKeyword}" Minimum="1.0" Maximum="255"
+                                            Interval="1.0"
+                                            Width="80" VerticalAlignment="Center" Margin="10,10,0,10" />
+                    <TextBlock Text="収集スレッド数:" VerticalAlignment="Center" Margin="40,10,0,10" />
+                    <controls:NumericUpDown Value="{Binding ImageSearcherThreadCount}" Minimum="1.0" Maximum="255"
+                                            Interval="1.0"
+                                            Width="80" VerticalAlignment="Center" Margin="10,10,0,10" />
+                    <TextBlock Text="収集された画像数:" VerticalAlignment="Center" Margin="40,10,0,10" />
+                    <TextBlock Text="{Binding OriginalImageCount, StringFormat='#,##0'}" VerticalAlignment="Center"
+                               Margin="10,10,0,10" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="クリア" Command="{Binding ClearOriginalImagesCommand}" VerticalAlignment="Center"
+                            Margin="0,10,10,10" />
+                </StackPanel>
+            </Grid>
         </GroupBox>
-        <GroupBox Header="画像変換" Grid.Row="2">
+        <GroupBox Header="画像変換" Grid.Row="2" IsEnabled="{Binding Connection, Converter={StaticResource NullToBooleanConverter}, ConverterParameter=true}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <StackPanel Orientation="Horizontal">
                     <Button Content="処理開始" Command="{Binding StartProcessingCommand}" VerticalAlignment="Center"
@@ -111,6 +133,10 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="クリア" Command="{Binding ClearResultImagesCommand}" VerticalAlignment="Center"
+                            Margin="0,10,10,10" />
+                </StackPanel>
             </Grid>
         </GroupBox>
     </Grid>

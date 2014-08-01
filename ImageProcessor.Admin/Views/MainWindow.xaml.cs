@@ -1,4 +1,6 @@
-﻿namespace ImageProcessor.Admin.Views
+﻿using System;
+
+namespace ImageProcessor.Admin.Views
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

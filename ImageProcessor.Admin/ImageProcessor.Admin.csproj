@@ -121,6 +121,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Converters\NullToBooleanConverter.cs" />
     <Compile Include="Models\ImageProcessor.cs" />
     <Compile Include="Models\ImageProcessedEventArgs.cs" />
     <Compile Include="Models\ImageSearchedEventArgs.cs" />

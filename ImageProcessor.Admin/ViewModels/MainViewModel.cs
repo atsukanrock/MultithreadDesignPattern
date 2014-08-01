@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reactive;
@@ -51,11 +52,12 @@ namespace ImageProcessor.Admin.ViewModels
 
         private bool _isMultiThreadMode;
 
-        private double _imageProcessorThreadCount = 4;
+        private int _imageProcessorThreadCount = 4;
 
         private int _processingMilliseconds;
 
         private readonly ObservableCollection<string> _resultImagePaths = new ObservableCollection<string>();
+        private int _originalImageCount;
 
         #endregion Property backing fields
 
@@ -66,10 +68,14 @@ namespace ImageProcessor.Admin.ViewModels
             StartReceivingKeywordsCommand = new RelayCommand(StartReceivingKeywords, () => Connection == null);
             StopReceivingKeywordsCommand = new RelayCommand(StopReceivingKeywords, () => Connection != null);
             SearchImagesCommand = new RelayCommand(SearchImages, () => PostedKeywords.Any());
+            ClearOriginalImagesCommand = new RelayCommand(ClearOriginalImages, () => ProcessingRequestMessages.Any());
             StartProcessingCommand = new RelayCommand(StartProcessing, () => ProcessingRequestMessages.Any());
+            ClearResultImagesCommand = new RelayCommand(ClearResultImages, () => ResultImagePaths.Any());
+            ClearTemporaryFilesCommand = new RelayCommand(ClearTemporaryFiles);
 
             _postedKeywords.CollectionChanged += PostedKeywordsOnCollectionChanged;
             _processingRequestMessages.CollectionChanged += ProcessingRequestMessagesOnCollectionChanged;
+            _resultImagePaths.CollectionChanged += ResultImagePathsOnCollectionChanged;
 
             if (IsInDesignMode)
             {
@@ -84,18 +90,21 @@ namespace ImageProcessor.Admin.ViewModels
             {
                 _postedKeywords.Add(new KeywordViewModel("ジョジョの奇妙な冒険"));
                 _postedKeywords.Add(new KeywordViewModel("魔人ブウ"));
-                _postedKeywords.ElementAt(1).NotifyPosted();
-                _postedKeywords.ElementAt(1).NotifyPosted();
+                _postedKeywords.Last().NotifyPosted();
+                _postedKeywords.Last().NotifyPosted();
+                _postedKeywords.Last().NotifyPosted();
+                _postedKeywords.Last().NotifyPosted();
+                _postedKeywords.Last().NotifyPosted();
             }
 #endif
         }
 
         #region Keywords
 
-        private IDisposable Connection
+        public IDisposable Connection
         {
             get { return _connection; }
-            set
+            private set
             {
                 var oldValue = _connection;
                 if (oldValue != null && !ReferenceEquals(oldValue, value))
@@ -249,6 +258,8 @@ namespace ImageProcessor.Admin.ViewModels
 
         private void ProcessingRequestMessagesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            RefreshOriginalImageCount();
+            ClearOriginalImagesCommand.RaiseCanExecuteChanged();
             StartProcessingCommand.RaiseCanExecuteChanged();
         }
 
@@ -264,6 +275,38 @@ namespace ImageProcessor.Admin.ViewModels
             set { _imageSearcherThreadCount = value; }
         }
 
+        public int OriginalImageCount
+        {
+            get { return _originalImageCount; }
+            private set
+            {
+                Set(() => OriginalImageCount, ref _originalImageCount, value);
+            }
+        }
+
+        private void RefreshOriginalImageCount()
+        {
+            OriginalImageCount = ProcessingRequestMessages.SelectMany(reqMsg => reqMsg.FileNames).Count();
+        }
+
+        public RelayCommand ClearOriginalImagesCommand { get; private set; }
+
+        private void ClearOriginalImages()
+        {
+            foreach (var fileName in _processingRequestMessages.SelectMany(reqMsg => reqMsg.FileNames))
+            {
+                try
+                {
+                    File.Delete(fileName);
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError("An error occurred when deleting an original image file {0}: {1}", fileName, ex);
+                }
+            }
+            _processingRequestMessages.Clear();
+        }
+
         #endregion Search
 
         #region Image processing
@@ -272,6 +315,8 @@ namespace ImageProcessor.Admin.ViewModels
 
         private async void StartProcessing()
         {
+            ClearResultImages();
+
             var stopwatch = Stopwatch.StartNew();
             using (Observable.Interval(TimeSpan.FromMilliseconds(500.0))
                              .ObserveOnDispatcher()
@@ -293,18 +338,21 @@ namespace ImageProcessor.Admin.ViewModels
 
         private async Task StartProcessingSingleThreadAsync()
         {
-            foreach (var fileName in ProcessingRequestMessages.SelectMany(reqMsg => reqMsg.FileNames))
+            await Task.Run(async () =>
             {
-                try
+                foreach (var fileName in ProcessingRequestMessages.SelectMany(reqMsg => reqMsg.FileNames))
                 {
-                    var resultFileName = await Models.ImageProcessor.ProcessAsync(fileName);
-                    _resultImagePaths.Add(resultFileName);
+                    try
+                    {
+                        var resultFileName = await Models.ImageProcessor.ProcessAsync(fileName);
+                        DispatcherHelper.CheckBeginInvokeOnUI(() => _resultImagePaths.Add(resultFileName));
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.TraceError("An error occurred when processing {0}: {1}", fileName, ex);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Trace.TraceError("An error occurred when processing {0}: {1}", fileName, ex);
-                }
-            }
+            });
         }
 
         private async Task StartProcessingMultiThreadAsync()
@@ -317,9 +365,8 @@ namespace ImageProcessor.Admin.ViewModels
             }
             channel.CompleteAdding();
 
-            var threadCount = (int)ImageProcessorThreadCount;
             var tasks = new List<Task>();
-            for (int i = 0; i < threadCount; i++)
+            for (int i = 0; i < ImageProcessorThreadCount; i++)
             {
                 var processor = new Models.ImageProcessor(channel);
                 Observable.FromEventPattern<ImageProcessedEventArgs>(eh => processor.ImageProcessed += eh,
@@ -363,10 +410,10 @@ namespace ImageProcessor.Admin.ViewModels
             set { Set(() => IsMultiThreadMode, ref _isMultiThreadMode, value); }
         }
 
-        public double ImageProcessorThreadCount
+        public int ImageProcessorThreadCount
         {
             get { return _imageProcessorThreadCount; }
-            set { Set(() => ImageProcessorThreadCount, ref _imageProcessorThreadCount, Math.Floor(value)); }
+            set { Set(() => ImageProcessorThreadCount, ref _imageProcessorThreadCount, value); }
         }
 
         public int ProcessingMilliseconds
@@ -378,6 +425,39 @@ namespace ImageProcessor.Admin.ViewModels
         public ObservableCollection<string> ResultImagePaths
         {
             get { return _resultImagePaths; }
+        }
+
+        private void ResultImagePathsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            ClearResultImagesCommand.RaiseCanExecuteChanged();
+        }
+
+        public RelayCommand ClearResultImagesCommand { get; private set; }
+
+        private void ClearResultImages()
+        {
+            foreach (var resultImagePath in _resultImagePaths)
+            {
+                try
+                {
+                    File.Delete(resultImagePath);
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError("An error occurred when deleting a result image file {0}: {1}", resultImagePath, ex);
+                }
+            }
+            _resultImagePaths.Clear();
+        }
+
+        #endregion Image processing
+
+        public RelayCommand ClearTemporaryFilesCommand { get; private set; }
+
+        private void ClearTemporaryFiles()
+        {
+            ClearOriginalImages();
+            ClearResultImages();
         }
 
         //private async Task EnsureCloudStorage()
@@ -402,7 +482,5 @@ namespace ImageProcessor.Admin.ViewModels
 
         //    _azureStorageObjectsInitialized = true;
         //}
-
-        #endregion Image processing
     }
 }
