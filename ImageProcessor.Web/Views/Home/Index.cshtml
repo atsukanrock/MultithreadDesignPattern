@@ -1,5 +1,4 @@
-﻿@*@model ImageProcessor.Web.Models.Home.IndexViewModel*@
-@{
+﻿@{
     ViewBag.Title = "検索キーワード指定";
 }
 
@@ -9,15 +8,17 @@
         <h4>加工する画像を検索するキーワードを指定します。</h4>
         <hr />
 
-        <div class="form-group">
-            <input type="text" id="keyword" maxlength="255" class="form-control input-lg" />
-            @*@Html.TextBoxFor(model => model.Keyword, new {maxlength = 255, @class = "form-control input-lg"})*@
-        </div>
-        <div class="row">
-            <div class="col-xs-4 col-xs-offset-4">
-                <input type="button" id="postkeyword" value="指定" class="btn btn-primary btn-lg btn-block" disabled="disabled" />
+        <!-- Reference the SignalR library. -->
+        <form id="frm-keyword">
+            <div class="form-group">
+                <input type="text" id="txt-keyword" maxlength="255" class="form-control input-lg" />
             </div>
-        </div>
+            <div class="row">
+                <div class="col-xs-4 col-xs-offset-4">
+                    <input type="submit" id="btn-postkeyword" value="指定" class="btn btn-primary btn-lg btn-block" />
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -30,29 +31,32 @@
     <!--Add script to update the page and send messages.-->
     <script type="text/javascript">
         $(function() {
-            var keywordHub = $.connection.keywordHub;
-            var $postkeyword = $('#postkeyword');
+            var frmKeyword = $('#frm-keyword');
+            var $txtKeyword = $('#txt-keyword');
+            var $btnPostkeyword = $('#btn-postkeyword');
 
-            $.connection.hub.start().done(function() {
-                $postkeyword.click(function() {
-                    var $keyword = $('#keyword');
-                    var keyword = $keyword.val();
-                    if (!keyword) {
-                        return;
-                    }
+            frmKeyword.submit(function(event) {
+                var keyword = $txtKeyword.val();
 
-                    $postkeyword.prop('disabled', true);
-                    keywordHub.server.post(keyword).done(function() {
-                        $keyword.val('').focus();
-                    }).fail(function() {
-                        alert('キーワードを送れませんでした。');
-                    }).always(function() {
-                        $postkeyword.prop('disabled', false);
-                    });
+                event.preventDefault();
+
+                if (!keyword) {
+                    return;
+                }
+
+                $btnPostkeyword.prop('disabled', true);
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/keywords/',
+                    contentType: "application/json",
+                    data: JSON.stringify(keyword)
+                }).done(function() {
+                    $txtKeyword.val('').focus();
+                }).fail(function() {
+                    alert('キーワードを送れませんでした。');
+                }).always(function() {
+                    $btnPostkeyword.prop('disabled', false);
                 });
-                $postkeyword.prop('disabled', false);
-            }).fail(function() {
-                alert('サーバーに接続できませんでした。');
             });
         });
     </script>
