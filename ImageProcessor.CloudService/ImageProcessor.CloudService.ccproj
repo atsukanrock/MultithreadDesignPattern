@@ -38,22 +38,6 @@
     <ServiceConfiguration Include="ServiceConfiguration.Cloud.cscfg" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ImageProcessor.MultithreadWorker\ImageProcessor.MultithreadWorker.csproj">
-      <Name>ImageProcessor.MultithreadWorker</Name>
-      <Project>{9004bfd8-dbb7-4987-b882-12cad72b64bf}</Project>
-      <Private>True</Private>
-      <RoleType>Worker</RoleType>
-      <RoleName>ImageProcessor.MultithreadWorker</RoleName>
-      <UpdateDiagnosticsConnectionStringOnPublish>True</UpdateDiagnosticsConnectionStringOnPublish>
-    </ProjectReference>
-    <ProjectReference Include="..\ImageProcessor.SimpleWorker\ImageProcessor.SimpleWorker.csproj">
-      <Name>ImageProcessor.SimpleWorker</Name>
-      <Project>{7bd7a9bb-7baf-4425-ab92-169acd1e29bc}</Project>
-      <Private>True</Private>
-      <RoleType>Worker</RoleType>
-      <RoleName>ImageProcessor.SimpleWorker</RoleName>
-      <UpdateDiagnosticsConnectionStringOnPublish>True</UpdateDiagnosticsConnectionStringOnPublish>
-    </ProjectReference>
     <ProjectReference Include="..\ImageProcessor.Web\ImageProcessor.Web.csproj">
       <Name>ImageProcessor.Web</Name>
       <Project>{8a7dc361-e1b3-41fe-84b8-9895c789d918}</Project>

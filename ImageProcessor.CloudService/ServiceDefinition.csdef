@@ -1,26 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ServiceDefinition name="ImageProcessor.CloudService" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" schemaVersion="2014-01.2.3">
-  <WorkerRole name="ImageProcessor.SimpleWorker" vmsize="ExtraSmall">
-    <Imports>
-      <Import moduleName="Diagnostics" />
-      <Import moduleName="RemoteAccess" />
-      <Import moduleName="RemoteForwarder" />
-    </Imports>
-    <ConfigurationSettings>
-      <Setting name="StorageConnectionString" />
-    </ConfigurationSettings>
-  </WorkerRole>
-  <WorkerRole name="ImageProcessor.MultithreadWorker" vmsize="ExtraSmall">
-    <Imports>
-      <Import moduleName="Diagnostics" />
-      <Import moduleName="RemoteAccess" />
-    </Imports>
-    <ConfigurationSettings>
-      <Setting name="StorageConnectionString" />
-      <Setting name="ConsumerThreadCount" />
-      <Setting name="ChannelCapacity" />
-    </ConfigurationSettings>
-  </WorkerRole>
   <WebRole name="ImageProcessor.Web" vmsize="ExtraSmall">
     <Sites>
       <Site name="Web">
@@ -35,6 +14,7 @@
     <Imports>
       <Import moduleName="Diagnostics" />
       <Import moduleName="RemoteAccess" />
+      <Import moduleName="RemoteForwarder" />
     </Imports>
   </WebRole>
 </ServiceDefinition>
