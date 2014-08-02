@@ -238,46 +238,40 @@ namespace ImageProcessor.Admin.ViewModels
 
                 //await EnsureCloudStorage();
                 var searcherTasks = new List<Task>();
+                var subscriptions = new List<IDisposable>();
                 for (int i = 0; i < ImageSearcherThreadCount; i++)
                 {
                     var searcher = new ImageSearcher(searcherChannel, ImagesPerKeyword);
-                    Observable.FromEventPattern<ImageSearchedEventArgs>(eh => searcher.ImageSearched += eh,
-                                                                        eh => searcher.ImageSearched -= eh)
-                              .Subscribe(args =>
-                              {
-                                  // ReSharper disable AccessToDisposedClosure
-                                  foreach (var result in args.EventArgs.ImageSearchResult.d.results)
-                                  {
-                                      retrieverChannel.Add(new Uri(result.MediaUrl));
-                                  }
-                                  if (keywordCount <= Interlocked.Increment(ref processedKeywordCount))
-                                  {
-                                      retrieverChannel.CompleteAdding();
-                                  }
-                                  // ReSharper restore AccessToDisposedClosure
-
-                                  //DispatcherHelper.CheckBeginInvokeOnUI(() =>
-                                  //{
-                                  //    var keywordIndex =
-                                  //        PostedKeywords.TakeWhile(
-                                  //            kwd =>
-                                  //                !string.Equals(kwd.Value, args.EventArgs.Keyword,
-                                  //                               StringComparison.OrdinalIgnoreCase))
-                                  //                      .Count();
-                                  //    PostedKeywords.RemoveAt(keywordIndex);
-                                  //});
-                              });
-                    Observable.FromEventPattern<ExceptionThrownEventArgs<string>>(eh => searcher.ExceptionThrown += eh,
-                                                                                  eh => searcher.ExceptionThrown -= eh)
-                              .Subscribe(args =>
-                              {
-                                  if (keywordCount <= Interlocked.Increment(ref processedKeywordCount))
+                    subscriptions.Add(
+                        Observable.FromEventPattern<ImageSearchedEventArgs>(
+                            eh => searcher.ImageSearched += eh,
+                            eh => searcher.ImageSearched -= eh)
+                                  .Subscribe(args =>
                                   {
                                       // ReSharper disable AccessToDisposedClosure
-                                      retrieverChannel.CompleteAdding();
+                                      foreach (var result in args.EventArgs.ImageSearchResult.d.results)
+                                      {
+                                          retrieverChannel.Add(new Uri(result.MediaUrl));
+                                      }
+                                      if (keywordCount <= Interlocked.Increment(ref processedKeywordCount))
+                                      {
+                                          retrieverChannel.CompleteAdding();
+                                      }
                                       // ReSharper restore AccessToDisposedClosure
-                                  }
-                              });
+                                  }));
+                    subscriptions.Add(
+                        Observable.FromEventPattern<ExceptionThrownEventArgs<string>>(
+                            eh => searcher.ExceptionThrown += eh,
+                            eh => searcher.ExceptionThrown -= eh)
+                                  .Subscribe(args =>
+                                  {
+                                      if (keywordCount <= Interlocked.Increment(ref processedKeywordCount))
+                                      {
+                                          // ReSharper disable AccessToDisposedClosure
+                                          retrieverChannel.CompleteAdding();
+                                          // ReSharper restore AccessToDisposedClosure
+                                      }
+                                  }));
 
                     searcherTasks.Add(Task.Run(async () => await searcher.Run()));
                 }
@@ -286,16 +280,23 @@ namespace ImageProcessor.Admin.ViewModels
                 for (int i = 0; i < ImageSearcherThreadCount; i++)
                 {
                     var searcher = new ImageRetriever(retrieverChannel);
-                    Observable.FromEventPattern<ImageRetrievedEventArgs>(eh => searcher.ImageRetrieved += eh,
-                                                                         eh => searcher.ImageRetrieved -= eh)
-                              .ObserveOnDispatcher()
-                              .Subscribe(args => OriginalImagePaths.Add(args.EventArgs.TemporaryFilePath));
+                    subscriptions.Add(
+                        Observable.FromEventPattern<ImageRetrievedEventArgs>(
+                            eh => searcher.ImageRetrieved += eh,
+                            eh => searcher.ImageRetrieved -= eh)
+                                  .ObserveOnDispatcher()
+                                  .Subscribe(args => OriginalImagePaths.Add(args.EventArgs.TemporaryFilePath)));
 
                     retrieverTasks.Add(Task.Run(async () => await searcher.Run()));
                 }
 
                 await Task.WhenAll(searcherTasks);
                 await Task.WhenAll(retrieverTasks);
+
+                foreach (var subscription in subscriptions)
+                {
+                    subscription.Dispose();
+                }
             }
         }
 
@@ -405,17 +406,23 @@ namespace ImageProcessor.Admin.ViewModels
             channel.CompleteAdding();
 
             var tasks = new List<Task>();
+            var subscriptions = new List<IDisposable>();
             for (int i = 0; i < ImageProcessorThreadCount; i++)
             {
                 var processor = new Models.ImageProcessor(channel);
-                Observable.FromEventPattern<ImageProcessedEventArgs>(eh => processor.ImageProcessed += eh,
-                                                                     eh => processor.ImageProcessed -= eh)
-                          .ObserveOnDispatcher()
-                          .Subscribe(OnImageProcessed);
+                subscriptions.Add(
+                    Observable.FromEventPattern<ImageProcessedEventArgs>(eh => processor.ImageProcessed += eh,
+                                                                         eh => processor.ImageProcessed -= eh)
+                              .ObserveOnDispatcher()
+                              .Subscribe(OnImageProcessed));
 
                 tasks.Add(Task.Run(async () => await processor.Run()));
             }
             await Task.WhenAll(tasks);
+            foreach (var subscription in subscriptions)
+            {
+                subscription.Dispose();
+            }
         }
 
         private void OnImageProcessed(EventPattern<ImageProcessedEventArgs> args)
