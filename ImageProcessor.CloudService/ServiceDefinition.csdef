@@ -17,4 +17,10 @@
       <Import moduleName="RemoteForwarder" />
     </Imports>
   </WebRole>
+  <WorkerRole name="ImageProcessor.MultithreadWorker" vmsize="Small">
+    <Imports>
+      <Import moduleName="Diagnostics" />
+      <Import moduleName="RemoteAccess" />
+    </Imports>
+  </WorkerRole>
 </ServiceDefinition>

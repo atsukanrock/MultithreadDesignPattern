@@ -30,6 +30,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.WindowsAzure.ServiceRuntime, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -40,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServiceRuntime\TasksRoleEntryPoint.cs" />
+    <Compile Include="ServiceRuntime\WorkerEntryPoint.cs" />
     <Compile Include="Storage\Queue\Messages\ProcessingRequestMessage.cs" />
   </ItemGroup>
   <ItemGroup />
