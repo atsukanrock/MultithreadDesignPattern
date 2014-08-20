@@ -1,99 +1,31 @@
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-using ImageProcessor.Imaging.Filters;
-using ImageProcessor.Storage.Queue.Messages;
+using ImageProcessor.ServiceRuntime;
 using Microsoft.WindowsAzure.Diagnostics;
 using Microsoft.WindowsAzure.ServiceRuntime;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Queue;
-using Newtonsoft.Json;
 using LogLevel = Microsoft.WindowsAzure.Diagnostics.LogLevel;
 
 namespace ImageProcessor.SimpleWorker
 {
-    public class WorkerRole : RoleEntryPoint
+    public class WorkerRole : TasksRoleEntryPoint
     {
         private CloudQueue _requestQueue;
         private CloudBlobContainer _originalImagesBlobContainer;
         private CloudBlobContainer _resultImagesBlobContainer;
 
-        public override async void Run()
+        public override void Run()
         {
             // This is a sample worker implementation. Replace with your logic.
             Trace.TraceInformation("ImageProcessor.SimpleWorker entry point called");
 
-            while (true)
-            {
-                CloudQueueMessage reqMsg = null;
-                try
-                {
-                    // Retrieve a new message from the queue.
-                    // A production app could be more efficient and scalable and conserve
-                    // on transaction costs by using the GetMessages method to get
-                    // multiple queue messages at a time. See:
-                    // http://azure.microsoft.com/en-us/documentation/articles/cloud-services-dotnet-multi-tier-app-storage-5-worker-role-b/#addcode
-                    reqMsg = _requestQueue.GetMessage();
-                    if (reqMsg != null)
-                    {
-                        await ProcessQueueMessageAsync(reqMsg);
-                    }
-                    else
-                    {
-                        await Task.Delay(1000);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    if (reqMsg != null && reqMsg.DequeueCount > 5)
-                    {
-                        _requestQueue.DeleteMessage(reqMsg);
-                        Trace.TraceError("Deleting poison queue item: '{0}'", reqMsg.AsString);
-                    }
-                    Trace.TraceError("Exception in SimpleWorker: '{0}'", ex);
-                    Thread.Sleep(5000);
-                }
-            }
-        }
+            var worker = new Worker(_requestQueue, _originalImagesBlobContainer, _resultImagesBlobContainer);
 
-        private async Task ProcessQueueMessageAsync(CloudQueueMessage requestMessage)
-        {
-            var reqMsgJson = requestMessage.AsString;
-            var reqMsgObj = JsonConvert.DeserializeObject<ProcessingRequestMessage>(reqMsgJson);
-            foreach (var orgFileName in reqMsgObj.FileNames)
-            {
-                var orgBlob = _originalImagesBlobContainer.GetBlockBlobReference(orgFileName);
-                var resultFileName = Guid.NewGuid().ToString("N") + Path.GetExtension(orgFileName);
-                var resultBlob = _resultImagesBlobContainer.GetBlockBlobReference(resultFileName);
-
-                using (var orgBlobStream = await orgBlob.OpenReadAsync())
-                using (var inStream = new MemoryStream())
-                {
-                    await orgBlobStream.CopyToAsync(inStream);
-
-                    using (var outStream = new MemoryStream())
-                    using (var resultBlobStream = await resultBlob.OpenWriteAsync())
-                    {
-                        using (var imageFactory = new ImageFactory())
-                        {
-                            imageFactory.Load(inStream)
-                                        .Filter(MatrixFilters.Comic)
-                                        .Save(outStream);
-                        }
-
-                        resultBlob.Properties.ContentType = orgBlob.Properties.ContentType;
-                        outStream.Position = 0;
-                        await outStream.CopyToAsync(resultBlobStream);
-                    }
-                }
-            }
-
-            await _requestQueue.DeleteMessageAsync(requestMessage);
+            Run(new WorkerEntryPoint[] {worker});
         }
 
         public override bool OnStart()
@@ -134,7 +66,7 @@ namespace ImageProcessor.SimpleWorker
             return base.OnStart();
         }
 
-        private void RoleEnvironmentOnChanging(object sender, RoleEnvironmentChangingEventArgs e)
+        private static void RoleEnvironmentOnChanging(object sender, RoleEnvironmentChangingEventArgs e)
         {
             // If the configuration setting(s) is changed, restart this role instance.
             if (e.Changes.Any(change => change is RoleEnvironmentConfigurationSettingChange))

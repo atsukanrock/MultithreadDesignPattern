@@ -38,4 +38,13 @@
       <Setting name="AzureMarketplaceAccountKey" />
     </ConfigurationSettings>
   </WorkerRole>
+  <WorkerRole name="ImageProcessor.SimpleWorker" vmsize="Small">
+    <Imports>
+      <Import moduleName="Diagnostics" />
+      <Import moduleName="RemoteAccess" />
+    </Imports>
+    <ConfigurationSettings>
+      <Setting name="StorageConnectionString" />
+    </ConfigurationSettings>
+  </WorkerRole>
 </ServiceDefinition>
