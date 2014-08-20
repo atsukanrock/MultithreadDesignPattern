@@ -46,6 +46,14 @@
       <RoleName>ImageProcessor.MultithreadWorker</RoleName>
       <UpdateDiagnosticsConnectionStringOnPublish>True</UpdateDiagnosticsConnectionStringOnPublish>
     </ProjectReference>
+    <ProjectReference Include="..\ImageProcessor.SearchWorker\ImageProcessor.SearchWorker.csproj">
+      <Name>ImageProcessor.SearchWorker</Name>
+      <Project>{bff7022f-0a34-4b8e-923f-c0a551b4f6e9}</Project>
+      <Private>True</Private>
+      <RoleType>Worker</RoleType>
+      <RoleName>ImageProcessor.SearchWorker</RoleName>
+      <UpdateDiagnosticsConnectionStringOnPublish>True</UpdateDiagnosticsConnectionStringOnPublish>
+    </ProjectReference>
     <ProjectReference Include="..\ImageProcessor.Web\ImageProcessor.Web.csproj">
       <Name>ImageProcessor.Web</Name>
       <Project>{8a7dc361-e1b3-41fe-84b8-9895c789d918}</Project>
@@ -60,6 +68,7 @@
     <Folder Include="ImageProcessor.SearchWorkerContent\" />
     <Folder Include="ImageProcessor.SimpleWorkerContent\" />
     <Folder Include="ImageProcessor.WebContent\" />
+    <Folder Include="Profiles" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ImageProcessor.MultithreadWorkerContent\diagnostics.wadcfg">
@@ -74,6 +83,9 @@
     <Content Include="ImageProcessor.WebContent\diagnostics.wadcfg">
       <SubType>Content</SubType>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <PublishProfile Include="Profiles\imgprocProduction.azurePubxml" />
   </ItemGroup>
   <!-- Import the target files for this project template -->
   <PropertyGroup>

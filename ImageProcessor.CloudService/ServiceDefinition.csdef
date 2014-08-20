@@ -22,5 +22,20 @@
       <Import moduleName="Diagnostics" />
       <Import moduleName="RemoteAccess" />
     </Imports>
+    <ConfigurationSettings>
+      <Setting name="StorageConnectionString" />
+      <Setting name="ConsumerThreadCount" />
+      <Setting name="ChannelCapacity" />
+    </ConfigurationSettings>
+  </WorkerRole>
+  <WorkerRole name="ImageProcessor.SearchWorker" vmsize="Small">
+    <Imports>
+      <Import moduleName="Diagnostics" />
+      <Import moduleName="RemoteAccess" />
+    </Imports>
+    <ConfigurationSettings>
+      <Setting name="StorageConnectionString" />
+      <Setting name="AzureMarketplaceAccountKey" />
+    </ConfigurationSettings>
   </WorkerRole>
 </ServiceDefinition>
