@@ -79,21 +79,13 @@
     <Folder Include="Profiles" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ImageProcessor.MultithreadWorkerContent\diagnostics.wadcfg">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="ImageProcessor.SearchWorkerContent\diagnostics.wadcfg">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="ImageProcessor.SimpleWorkerContent\diagnostics.wadcfg">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="ImageProcessor.WebContent\diagnostics.wadcfg">
-      <SubType>Content</SubType>
-    </Content>
+    <PublishProfile Include="Profiles\imgprocProduction.azurePubxml" />
   </ItemGroup>
   <ItemGroup>
-    <PublishProfile Include="Profiles\imgprocProduction.azurePubxml" />
+    <DiagnosticsConfiguration Include="ImageProcessor.MultithreadWorkerContent\diagnostics.wadcfgx" />
+    <DiagnosticsConfiguration Include="ImageProcessor.SearchWorkerContent\diagnostics.wadcfgx" />
+    <DiagnosticsConfiguration Include="ImageProcessor.SimpleWorkerContent\diagnostics.wadcfgx" />
+    <DiagnosticsConfiguration Include="ImageProcessor.WebContent\diagnostics.wadcfgx" />
   </ItemGroup>
   <!-- Import the target files for this project template -->
   <PropertyGroup>
