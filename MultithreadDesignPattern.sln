@@ -1,8 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{8736194A-8A9A-419C-B53E-06A11EA78FCB}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultithreadDesignPattern", "MultithreadDesignPattern\MultithreadDesignPattern.csproj", "{6CAD61CC-B9BA-4D6D-A007-FF51CFB72A65}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProducerConsumer.ConsoleApp", "ProducerConsumer.ConsoleApp\ProducerConsumer.ConsoleApp.csproj", "{693F6440-6B36-4BEE-BC2D-298400235E03}"
@@ -14,8 +16,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessor.SimpleWorker", "ImageProcessor.SimpleWorker\ImageProcessor.SimpleWorker.csproj", "{7BD7A9BB-7BAF-4425-AB92-169ACD1E29BC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessor.MultithreadWorker", "ImageProcessor.MultithreadWorker\ImageProcessor.MultithreadWorker.csproj", "{9004BFD8-DBB7-4987-B882-12CAD72B64BF}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{8736194A-8A9A-419C-B53E-06A11EA78FCB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSearch", "ImageSearch\ImageSearch.csproj", "{9F773F5E-C448-4EA6-B0B4-5707018D3FF6}"
 EndProject
