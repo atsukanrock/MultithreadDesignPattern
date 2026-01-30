@@ -1,57 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
+﻿using System.Diagnostics;
 
-namespace MultithreadDesignPattern.ProducerConsumer
+namespace MultithreadDesignPattern.ProducerConsumer;
+
+public class Channel<T>
 {
-    public class Channel<T>
+    private readonly object _lockObj = new();
+    private readonly int _capacity;
+    private readonly Queue<T> _queue;
+
+    public Channel(int capacity)
     {
-        private readonly object _lockObj = new object();
-        private readonly int _capacity;
-        private readonly Queue<T> _queue;
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
 
-        public Channel(int capacity)
+        _capacity = capacity;
+        _queue = new Queue<T>(capacity);
+    }
+
+    public void Add(T item)
+    {
+        lock (_lockObj)
         {
-            if (capacity < 1)
+            while (_queue.Count >= _capacity)
             {
-                throw new ArgumentOutOfRangeException("capacity");
+                Debug.WriteLine("Thread#{0} starts waiting to add.", Environment.CurrentManagedThreadId);
+                Monitor.Wait(_lockObj);
+                Debug.WriteLine("Thread#{0} is notified while waiting to add.", Environment.CurrentManagedThreadId);
             }
-            _capacity = capacity;
-            _queue = new Queue<T>(capacity);
+            _queue.Enqueue(item);
+            Monitor.PulseAll(_lockObj);
         }
+    }
 
-        public void Add(T item)
+    public T Take()
+    {
+        lock (_lockObj)
         {
-            lock (_lockObj)
+            while (_queue.Count == 0)
             {
-                while (_queue.Count >= _capacity)
-                {
-                    Debug.WriteLine("Thread#{0} starts waiting to add.", Thread.CurrentThread.ManagedThreadId);
-                    Monitor.Wait(_lockObj);
-                    Debug.WriteLine("Thread#{0} is notified while waiting to add.", Thread.CurrentThread.ManagedThreadId);
-                }
-                _queue.Enqueue(item);
-                Monitor.PulseAll(_lockObj);
+                Debug.WriteLine("Thread#{0} starts waiting to take.", Environment.CurrentManagedThreadId);
+                Monitor.Wait(_lockObj);
+                Debug.WriteLine("Thread#{0} is notified while waiting to take.", Environment.CurrentManagedThreadId);
             }
-        }
-
-        public T Take()
-        {
-            lock (_lockObj)
-            {
-                while (!_queue.Any())
-                {
-                    Debug.WriteLine("Thread#{0} starts waiting to take.", Thread.CurrentThread.ManagedThreadId);
-                    Monitor.Wait(_lockObj);
-                    Debug.WriteLine("Thread#{0} is notified while waiting to take.",
-                                    Thread.CurrentThread.ManagedThreadId);
-                }
-                var item = _queue.Dequeue();
-                Monitor.PulseAll(_lockObj);
-                return item;
-            }
+            var item = _queue.Dequeue();
+            Monitor.PulseAll(_lockObj);
+            return item;
         }
     }
 }
