@@ -2,6 +2,6 @@
 {
     public class ImageSearchObject
     {
-        public Data d { get; set; }
+        public Data? d { get; set; }
     }
 }

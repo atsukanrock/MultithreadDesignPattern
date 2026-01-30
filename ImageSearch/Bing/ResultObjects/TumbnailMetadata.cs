@@ -2,6 +2,6 @@
 {
     public class TumbnailMetadata
     {
-        public string type { get; set; }
+        public string? type { get; set; }
     }
 }
