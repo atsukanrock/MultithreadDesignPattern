@@ -1,105 +1,84 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Net;
+using Azure.Storage.Blobs;
+using Azure.Storage.Queues;
 using ImageProcessor.ServiceRuntime;
-using Microsoft.WindowsAzure.Diagnostics;
-using Microsoft.WindowsAzure.ServiceRuntime;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.WindowsAzure.Storage.Queue;
-using LogLevel = Microsoft.WindowsAzure.Diagnostics.LogLevel;
+using Microsoft.Extensions.Configuration;
 
-namespace ImageProcessor.MultithreadWorker
+namespace ImageProcessor.MultithreadWorker;
+
+public class WorkerRole : TasksRoleEntryPoint
 {
-    public class WorkerRole : TasksRoleEntryPoint
+    private QueueClient? _requestQueue;
+    private BlobContainerClient? _originalImagesBlobContainer;
+    private BlobContainerClient? _resultImagesBlobContainer;
+
+    private BlockingCollection<OriginalImageInfo>? _channel;
+    private readonly IConfiguration _configuration;
+
+    public WorkerRole(IConfiguration configuration)
     {
-        private CloudQueue _requestQueue;
-        private CloudBlobContainer _originalImagesBlobContainer;
-        private CloudBlobContainer _resultImagesBlobContainer;
+        _configuration = configuration;
+    }
 
-        private BlockingCollection<OriginalImageInfo> _channel;
+    public void RunWorker()
+    {
+        Trace.TraceInformation("ImageProcessor.MultithreadWorker entry point called.");
 
-        public override void Run()
+        if (_channel == null || _requestQueue == null || _originalImagesBlobContainer == null || _resultImagesBlobContainer == null)
         {
-            Trace.TraceInformation("ImageProcessor.MultithreadWorker entry point called.");
-
-            var workers = new List<WorkerEntryPoint>();
-
-            workers.Add(new Producer(_channel, _requestQueue, _originalImagesBlobContainer));
-
-            var consumerThreadCount = int.Parse(RoleEnvironment.GetConfigurationSettingValue("ConsumerThreadCount"));
-            Trace.TraceInformation("The # of consumer threads: {0}", consumerThreadCount);
-            for (int i = 0; i < consumerThreadCount; i++)
-            {
-                var consumer = new Consumer(_channel, _resultImagesBlobContainer);
-                workers.Add(consumer);
-                //Task.Run((Func<Task>)consumer.Run).ConfigureAwait(false);
-            }
-            //Trace.TraceInformation("Consumer {0} threads has been started.", consumerThreadCount);
-
-            Run(workers.ToArray());
+            throw new InvalidOperationException("Worker not initialized. Call OnStart first.");
         }
 
-        public override bool OnStart()
+        var workers = new List<WorkerEntryPoint>();
+
+        workers.Add(new Producer(_channel, _requestQueue, _originalImagesBlobContainer));
+
+        var consumerThreadCount = _configuration.GetValue<int>("Worker:ConsumerThreadCount", 4);
+        Trace.TraceInformation("The # of consumer threads: {0}", consumerThreadCount);
+        for (int i = 0; i < consumerThreadCount; i++)
         {
-            Trace.TraceInformation("ImageProcessor.MultithreadWorker OnStart called");
-
-            // Set the maximum number of concurrent connections 
-            ServicePointManager.DefaultConnectionLimit = 12;
-
-            var config = DiagnosticMonitor.GetDefaultInitialConfiguration();
-            config.Logs.ScheduledTransferPeriod = TimeSpan.FromMinutes(1.0);
-            config.Logs.ScheduledTransferLogLevelFilter = LogLevel.Information;
-            config.Logs.BufferQuotaInMB = 500;
-            DiagnosticMonitor.Start("Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString", config);
-
-            // For information on handling configuration changes
-            // see the MSDN topic at http://go.microsoft.com/fwlink/?LinkId=166357.
-            RoleEnvironment.Changing += RoleEnvironmentOnChanging;
-
-            // Open storage account using credentials from .cscfg file.
-            var storageAccount = CloudStorageAccount.Parse(
-                RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
-
-            //Trace.TraceInformation("Creating request queue");
-            var queueClient = storageAccount.CreateCloudQueueClient();
-            _requestQueue = queueClient.GetQueueReference("multithread-worker-requests");
-            _requestQueue.CreateIfNotExists();
-
-            //Trace.TraceInformation("Creating original images blob container");
-            var blobClient = storageAccount.CreateCloudBlobClient();
-            _originalImagesBlobContainer = blobClient.GetContainerReference("original-images");
-            _originalImagesBlobContainer.CreateIfNotExists();
-
-            //Trace.TraceInformation("Creating result images blob container");
-            _resultImagesBlobContainer = blobClient.GetContainerReference("multithread-result-images");
-            _resultImagesBlobContainer.CreateIfNotExists();
-
-            _channel =
-                new BlockingCollection<OriginalImageInfo>(
-                    int.Parse(RoleEnvironment.GetConfigurationSettingValue("ChannelCapacity")));
-
-            return base.OnStart();
+            var consumer = new Consumer(_channel, _resultImagesBlobContainer);
+            workers.Add(consumer);
         }
 
-        private static void RoleEnvironmentOnChanging(object sender, RoleEnvironmentChangingEventArgs e)
-        {
-            // If the configuration setting(s) is changed, restart this role instance.
-            if (e.Changes.Any(change => change is RoleEnvironmentConfigurationSettingChange))
-            {
-                e.Cancel = true;
-            }
-        }
+        Run([.. workers]);
+    }
 
-        public override void OnStop()
-        {
-            if (_channel != null)
-                _channel.Dispose();
+    public bool OnStart()
+    {
+        Trace.TraceInformation("ImageProcessor.MultithreadWorker OnStart called");
 
-            base.OnStop();
-        }
+        // Get storage connection string from configuration
+        var storageConnectionString = _configuration.GetConnectionString("StorageAccount")
+            ?? throw new InvalidOperationException("StorageAccount connection string not found in configuration");
+
+        // Create queue client
+        _requestQueue = new QueueClient(storageConnectionString, "multithread-worker-requests");
+        _requestQueue.CreateIfNotExists();
+
+        // Create blob service client
+        var blobServiceClient = new BlobServiceClient(storageConnectionString);
+
+        // Create blob containers
+        _originalImagesBlobContainer = blobServiceClient.GetBlobContainerClient("original-images");
+        _originalImagesBlobContainer.CreateIfNotExists();
+
+        _resultImagesBlobContainer = blobServiceClient.GetBlobContainerClient("multithread-result-images");
+        _resultImagesBlobContainer.CreateIfNotExists();
+
+        // Create channel with configured capacity
+        var channelCapacity = _configuration.GetValue<int>("Worker:ChannelCapacity", 100);
+        _channel = new BlockingCollection<OriginalImageInfo>(channelCapacity);
+
+        Trace.TraceInformation("ImageProcessor.MultithreadWorker initialized successfully");
+
+        return true;
+    }
+
+    public new void OnStop()
+    {
+        _channel?.Dispose();
+        base.OnStop();
     }
 }

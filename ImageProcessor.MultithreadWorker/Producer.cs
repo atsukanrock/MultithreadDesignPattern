@@ -1,108 +1,111 @@
-using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Queues;
+using Azure.Storage.Queues.Models;
 using ImageProcessor.ServiceRuntime;
 using ImageProcessor.Storage.Queue.Messages;
-using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
 
-namespace ImageProcessor.MultithreadWorker
+namespace ImageProcessor.MultithreadWorker;
+
+internal class Producer : WorkerEntryPoint
 {
-    internal class Producer : WorkerEntryPoint
+    private readonly BlockingCollection<OriginalImageInfo> _channel;
+    private readonly QueueClient _requestQueue;
+    private readonly BlobContainerClient _originalImagesBlobContainer;
+
+    public Producer(BlockingCollection<OriginalImageInfo> channel, QueueClient requestQueue,
+                    BlobContainerClient originalImagesBlobContainer)
     {
-        private readonly BlockingCollection<OriginalImageInfo> _channel;
-        private readonly CloudQueue _requestQueue;
-        private readonly CloudBlobContainer _originalImagesBlobContainer;
+        _channel = channel;
+        _requestQueue = requestQueue;
+        _originalImagesBlobContainer = originalImagesBlobContainer;
+    }
 
-        public Producer(BlockingCollection<OriginalImageInfo> channel, CloudQueue requestQueue,
-                        CloudBlobContainer originalImagesBlobContainer)
+    private CancellationToken CancellationToken { get; set; }
+
+    public override Task<bool> OnStart(CancellationToken cancellationToken)
+    {
+        CancellationToken = cancellationToken;
+        return base.OnStart(cancellationToken);
+    }
+
+    public override async Task Run()
+    {
+        try
         {
-            _channel = channel;
-            _requestQueue = requestQueue;
-            _originalImagesBlobContainer = originalImagesBlobContainer;
-        }
-
-        private CancellationToken CancellationToken { get; set; }
-
-        public override Task<bool> OnStart(CancellationToken cancellationToken)
-        {
-            this.CancellationToken = cancellationToken;
-            return base.OnStart(cancellationToken);
-        }
-
-        public override async Task Run()
-        {
-            try
+            while (true)
             {
-                while (true)
+                // Retrieve a new message from the queue.
+                var response = await _requestQueue.ReceiveMessageAsync(cancellationToken: CancellationToken);
+                CancellationToken.ThrowIfCancellationRequested();
+
+                if (response.Value == null)
                 {
-                    // Retrieve a new message from the queue.
-                    // A production app could be more efficient and scalable and conserve
-                    // on transaction costs by using the GetMessages method to get
-                    // multiple queue messages at a time. See:
-                    // http://azure.microsoft.com/en-us/documentation/articles/cloud-services-dotnet-multi-tier-app-storage-5-worker-role-b/#addcode
-                    var reqMsg = await _requestQueue.GetMessageAsync(this.CancellationToken);
-                    this.CancellationToken.ThrowIfCancellationRequested();
-                    if (reqMsg == null)
-                    {
-                        // There is no message in the _requestQueue.
-                        await Task.Delay(1000, this.CancellationToken);
-                        this.CancellationToken.ThrowIfCancellationRequested();
-                        continue;
-                    }
-
-                    // Delete a poison message.
-                    if (reqMsg.DequeueCount > 5)
-                    {
-                        Trace.TraceError("Deleting a poison queue item: '{0}'", reqMsg.AsString);
-                        await _requestQueue.DeleteMessageAsync(reqMsg, this.CancellationToken);
-                        this.CancellationToken.ThrowIfCancellationRequested();
-                        continue;
-                    }
-
-                    await ProcessQueueMessageAsync(reqMsg);
-                    this.CancellationToken.ThrowIfCancellationRequested();
+                    // There is no message in the _requestQueue.
+                    await Task.Delay(1000, CancellationToken);
+                    CancellationToken.ThrowIfCancellationRequested();
+                    continue;
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                Trace.TraceInformation("[Producer] Cancelled by cancellation token.");
-            }
-            catch (SystemException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError("[Producer] Exception: '{0}'", ex);
-            }
-        }
 
-        private async Task ProcessQueueMessageAsync(CloudQueueMessage requestMessage)
-        {
-            var reqMsgJson = requestMessage.AsString;
-            var reqMsgObj = JsonConvert.DeserializeObject<ProcessingRequestMessage>(reqMsgJson);
+                var reqMsg = response.Value;
 
-            Parallel.ForEach(
-                reqMsgObj.FileNames,
-                async orgFileName =>
+                // Delete a poison message.
+                if (reqMsg.DequeueCount > 5)
                 {
-                    var orgBlob = _originalImagesBlobContainer.GetBlockBlobReference(orgFileName);
-                    using (var orgBlobStream = await orgBlob.OpenReadAsync(this.CancellationToken))
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        await orgBlobStream.CopyToAsync(memoryStream);
-                        _channel.Add(
-                            new OriginalImageInfo(orgFileName, orgBlob.Properties.ContentType, memoryStream.ToArray()),
-                            this.CancellationToken);
-                    }
-                });
+                    Trace.TraceError("Deleting a poison queue item: '{0}'", reqMsg.MessageText);
+                    await _requestQueue.DeleteMessageAsync(reqMsg.MessageId, reqMsg.PopReceipt, CancellationToken);
+                    CancellationToken.ThrowIfCancellationRequested();
+                    continue;
+                }
 
-            await _requestQueue.DeleteMessageAsync(requestMessage, this.CancellationToken);
+                await ProcessQueueMessageAsync(reqMsg);
+                CancellationToken.ThrowIfCancellationRequested();
+            }
         }
+        catch (OperationCanceledException)
+        {
+            Trace.TraceInformation("[Producer] Cancelled by cancellation token.");
+        }
+        catch (SystemException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError("[Producer] Exception: '{0}'", ex);
+        }
+    }
+
+    private async Task ProcessQueueMessageAsync(QueueMessage requestMessage)
+    {
+        var reqMsgJson = requestMessage.MessageText;
+        var reqMsgObj = JsonConvert.DeserializeObject<ProcessingRequestMessage>(reqMsgJson);
+
+        if (reqMsgObj == null)
+        {
+            Trace.TraceWarning("[Producer] Failed to deserialize message");
+            return;
+        }
+
+        // Download all images in parallel and add to channel
+        var tasks = reqMsgObj.FileNames.Select(async orgFileName =>
+        {
+            var orgBlobClient = _originalImagesBlobContainer.GetBlobClient(orgFileName);
+            var downloadResponse = await orgBlobClient.DownloadAsync(CancellationToken);
+            var contentType = downloadResponse.Value.Details.ContentType;
+
+            using var memoryStream = new MemoryStream();
+            await downloadResponse.Value.Content.CopyToAsync(memoryStream, CancellationToken);
+
+            _channel.Add(
+                new OriginalImageInfo(orgFileName, contentType, memoryStream.ToArray()),
+                CancellationToken);
+        });
+
+        await Task.WhenAll(tasks);
+
+        await _requestQueue.DeleteMessageAsync(requestMessage.MessageId, requestMessage.PopReceipt, CancellationToken);
     }
 }
