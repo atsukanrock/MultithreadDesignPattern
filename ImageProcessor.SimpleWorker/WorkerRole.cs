@@ -1,78 +1,62 @@
-using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Net;
+using Azure.Storage.Blobs;
+using Azure.Storage.Queues;
 using ImageProcessor.ServiceRuntime;
-using Microsoft.WindowsAzure.Diagnostics;
-using Microsoft.WindowsAzure.ServiceRuntime;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.WindowsAzure.Storage.Queue;
-using LogLevel = Microsoft.WindowsAzure.Diagnostics.LogLevel;
+using Microsoft.Extensions.Configuration;
 
-namespace ImageProcessor.SimpleWorker
+namespace ImageProcessor.SimpleWorker;
+
+public class WorkerRole : TasksRoleEntryPoint
 {
-    public class WorkerRole : TasksRoleEntryPoint
+    private QueueClient? _requestQueue;
+    private BlobContainerClient? _originalImagesBlobContainer;
+    private BlobContainerClient? _resultImagesBlobContainer;
+    private readonly IConfiguration _configuration;
+
+    public WorkerRole(IConfiguration configuration)
     {
-        private CloudQueue _requestQueue;
-        private CloudBlobContainer _originalImagesBlobContainer;
-        private CloudBlobContainer _resultImagesBlobContainer;
+        _configuration = configuration;
+    }
 
-        public override void Run()
+    public void RunWorker()
+    {
+        // This is a sample worker implementation. Replace with your logic.
+        Trace.TraceInformation("ImageProcessor.SimpleWorker entry point called");
+
+        if (_requestQueue == null || _originalImagesBlobContainer == null || _resultImagesBlobContainer == null)
         {
-            // This is a sample worker implementation. Replace with your logic.
-            Trace.TraceInformation("ImageProcessor.SimpleWorker entry point called");
-
-            var worker = new Worker(_requestQueue, _originalImagesBlobContainer, _resultImagesBlobContainer);
-
-            Run(new WorkerEntryPoint[] {worker});
+            throw new InvalidOperationException("Worker not initialized. Call OnStart first.");
         }
 
-        public override bool OnStart()
-        {
-            Trace.TraceInformation("ImageProcessor.SimpleWorker OnStart called");
+        var worker = new Worker(_requestQueue, _originalImagesBlobContainer, _resultImagesBlobContainer);
 
-            // Set the maximum number of concurrent connections 
-            ServicePointManager.DefaultConnectionLimit = 12;
+        Run([worker]);
+    }
 
-            var config = DiagnosticMonitor.GetDefaultInitialConfiguration();
-            config.Logs.ScheduledTransferPeriod = TimeSpan.FromMinutes(1.0);
-            config.Logs.ScheduledTransferLogLevelFilter = LogLevel.Information;
-            config.Logs.BufferQuotaInMB = 500;
-            DiagnosticMonitor.Start("Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString", config);
+    public bool OnStart()
+    {
+        Trace.TraceInformation("ImageProcessor.SimpleWorker OnStart called");
 
-            // For information on handling configuration changes
-            // see the MSDN topic at http://go.microsoft.com/fwlink/?LinkId=166357.
-            RoleEnvironment.Changing += RoleEnvironmentOnChanging;
+        // Get storage connection string from configuration
+        var storageConnectionString = _configuration.GetConnectionString("StorageAccount")
+            ?? throw new InvalidOperationException("StorageAccount connection string not found in configuration");
 
-            // Open storage account using credentials from .cscfg file.
-            var storageAccount = CloudStorageAccount.Parse(
-                RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
+        // Create queue client
+        _requestQueue = new QueueClient(storageConnectionString, "simple-worker-requests");
+        _requestQueue.CreateIfNotExists();
 
-            //Trace.TraceInformation("Creating request queue");
-            var queueClient = storageAccount.CreateCloudQueueClient();
-            _requestQueue = queueClient.GetQueueReference("simple-worker-requests");
-            _requestQueue.CreateIfNotExists();
+        // Create blob service client
+        var blobServiceClient = new BlobServiceClient(storageConnectionString);
 
-            //Trace.TraceInformation("Creating original images blob container");
-            var blobClient = storageAccount.CreateCloudBlobClient();
-            _originalImagesBlobContainer = blobClient.GetContainerReference("original-images");
-            _originalImagesBlobContainer.CreateIfNotExists();
+        // Create blob containers
+        _originalImagesBlobContainer = blobServiceClient.GetBlobContainerClient("original-images");
+        _originalImagesBlobContainer.CreateIfNotExists();
 
-            //Trace.TraceInformation("Creating result images blob container");
-            _resultImagesBlobContainer = blobClient.GetContainerReference("simple-result-images");
-            _resultImagesBlobContainer.CreateIfNotExists();
+        _resultImagesBlobContainer = blobServiceClient.GetBlobContainerClient("simple-result-images");
+        _resultImagesBlobContainer.CreateIfNotExists();
 
-            return base.OnStart();
-        }
+        Trace.TraceInformation("ImageProcessor.SimpleWorker initialized successfully");
 
-        private static void RoleEnvironmentOnChanging(object sender, RoleEnvironmentChangingEventArgs e)
-        {
-            // If the configuration setting(s) is changed, restart this role instance.
-            if (e.Changes.Any(change => change is RoleEnvironmentConfigurationSettingChange))
-            {
-                e.Cancel = true;
-            }
-        }
+        return true;
     }
 }
