@@ -2,7 +2,31 @@
 
 このガイドでは、プロジェクトを .NET Framework 4.5 から .NET 8.0 に段階的に移行する手順を説明します。
 
-## 移行の優先順位
+## 移行ステータス (2026-02-03 更新)
+
+```
+✅ 1. ImageSearch (PCL)           → .NET 8 (完了)
+✅ 2. ImageProcessor.Core         → .NET 8 (完了)
+✅ 3. ImageProcessor.SimpleWorker → .NET 8 Worker Service (完了)
+✅ 4. ImageProcessor.MultithreadWorker → .NET 8 Worker Service (完了)
+✅ 5. ImageProcessor.SearchWorker → .NET 8 Worker Service (完了)
+✅ 6. ImageProcessor.Admin        → .NET 8 WPF (完了 - Windows で起動確認済み)
+⏳ 7. ImageProcessor.Web          → ASP.NET Core 8.0 (未着手)
+```
+
+**進捗**: 6/7 プロジェクト完了 (85.7%)
+
+## 新しいドキュメント
+
+移行作業が進んだため、以下の新しいドキュメントが利用可能です:
+
+- **[MIGRATION_STATUS.md](MIGRATION_STATUS.md)** - 詳細な移行状況と技術スタックの変更
+- **[GETTING_STARTED.md](GETTING_STARTED.md)** - 各プロジェクトの起動方法
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - よくある問題と解決方法
+
+---
+
+## 移行の優先順位（参考）
 
 ```
 1. ImageSearch (PCL)           → .NET 8 (簡単、依存なし)
@@ -10,7 +34,8 @@
 3. ImageProcessor.SimpleWorker → .NET 8 Worker Service
 4. ImageProcessor.MultithreadWorker → .NET 8 Worker Service
 5. ImageProcessor.SearchWorker → .NET 8 Worker Service
-6. ImageProcessor.Web          → ASP.NET Core 8.0
+6. ImageProcessor.Admin        → .NET 8 WPF
+7. ImageProcessor.Web          → ASP.NET Core 8.0
 ```
 
 ## ステップ 1: ImageSearch の移行（20分）
