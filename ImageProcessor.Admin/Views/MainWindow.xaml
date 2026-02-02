@@ -3,7 +3,7 @@
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                       xmlns:viewModels="clr-namespace:ImageProcessor.Admin.ViewModels"
-                      xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+                      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
                       Title="Image Processor Admin Tool" Width="1600" Height="900" GlowBrush="Black"
                       WindowStartupLocation="CenterScreen">
     <controls:MetroWindow.DataContext>

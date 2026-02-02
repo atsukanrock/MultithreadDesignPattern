@@ -4,7 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using ImageProcessor.Imaging.Filters;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 namespace ImageProcessor.Admin.Models
 {
@@ -14,7 +15,7 @@ namespace ImageProcessor.Admin.Models
         {
         }
 
-        public event EventHandler<ImageProcessedEventArgs> ImageProcessed;
+        public event EventHandler<ImageProcessedEventArgs>? ImageProcessed;
 
         protected virtual void OnImageProcessed(ImageProcessedEventArgs e)
         {
@@ -32,28 +33,19 @@ namespace ImageProcessor.Admin.Models
         {
             var resultFilePath = Path.GetTempFileName();
 
-            using (var inStream = new MemoryStream(File.ReadAllBytes(originalFilePath)))
+            Trace.TraceInformation("Consumer thread #{0} starts processing an image.",
+                                   Thread.CurrentThread.ManagedThreadId);
+
+            using (var image = await Image.LoadAsync(originalFilePath))
             {
-                using (var outStream = new MemoryStream())
-                using (var resultFileStream = new FileStream(resultFilePath, FileMode.Open, FileAccess.Write))
-                {
-                    Trace.TraceInformation("Consumer thread #{0} starts processing an image.",
-                                           Thread.CurrentThread.ManagedThreadId);
+                // Apply grayscale filter (as a replacement for Comic filter)
+                image.Mutate(x => x.Grayscale());
 
-                    using (var imageFactory = new ImageFactory())
-                    {
-                        imageFactory.Load(inStream)
-                                    .Filter(MatrixFilters.Comic)
-                                    .Save(outStream);
-                    }
-
-                    outStream.Position = 0;
-                    await outStream.CopyToAsync(resultFileStream);
-
-                    Trace.TraceInformation("Consumer thread #{0} saved an result image.",
-                                           Thread.CurrentThread.ManagedThreadId);
-                }
+                await image.SaveAsync(resultFilePath);
             }
+
+            Trace.TraceInformation("Consumer thread #{0} saved a result image.",
+                                   Thread.CurrentThread.ManagedThreadId);
 
             return resultFilePath;
         }

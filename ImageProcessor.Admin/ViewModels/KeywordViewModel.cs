@@ -1,12 +1,16 @@
-﻿using System.Windows;
-using GalaSoft.MvvmLight;
+using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ImageProcessor.Admin.ViewModels
 {
-    public class KeywordViewModel : ViewModelBase
+    public partial class KeywordViewModel : ObservableObject
     {
         private readonly string _value;
+
+        [ObservableProperty]
         private int _postedCount;
+
+        [ObservableProperty]
         private double _fontSize;
 
         public KeywordViewModel(string value)
@@ -15,25 +19,11 @@ namespace ImageProcessor.Admin.ViewModels
             PostedCount = 1;
         }
 
-        public string Value
-        {
-            get { return _value; }
-        }
+        public string Value => _value;
 
-        public int PostedCount
+        partial void OnPostedCountChanged(int value)
         {
-            get { return _postedCount; }
-            private set
-            {
-                Set(() => PostedCount, ref _postedCount, value);
-                this.FontSize = SystemFonts.MessageFontSize + 4.0 * (value - 1);
-            }
-        }
-
-        public double FontSize
-        {
-            get { return _fontSize; }
-            private set { Set(() => FontSize, ref _fontSize, value); }
+            FontSize = SystemFonts.MessageFontSize + 4.0 * (value - 1);
         }
 
         public void NotifyPosted()

@@ -1,5 +1,3 @@
-﻿using GalaSoft.MvvmLight.Threading;
-
 namespace ImageProcessor.Admin
 {
     /// <summary>
@@ -7,9 +5,5 @@ namespace ImageProcessor.Admin
     /// </summary>
     public partial class App
     {
-        static App()
-        {
-            DispatcherHelper.Initialize();
-        }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,28 +14,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
-using GalaSoft.MvvmLight.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using ImageProcessor.Admin.Models;
 using ImageProcessor.Admin.Properties;
-using Microsoft.AspNet.SignalR.Client;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace ImageProcessor.Admin.ViewModels
 {
-    public class MainViewModel : ViewModelBase
+    public partial class MainViewModel : ObservableObject
     {
-        //private bool _azureStorageObjectsInitialized;
-        //private CloudBlobContainer _originalImagesBlobContainer;
-        //private CloudQueue _simpleWorkerRequestQueue;
-        //private CloudQueue _multithreadWorkerRequestQueue;
-
         #region Property backing fields
 
-        private IDisposable _connection;
+        private IDisposable? _connection;
 
-        private Brush _connectionStateFill;
+        [ObservableProperty]
+        private Brush _connectionStateFill = new SolidColorBrush(Colors.Red);
 
+        [ObservableProperty]
         private double _keywordCountFontSize;
 
         private readonly ObservableCollection<KeywordViewModel> _postedKeywords =
@@ -43,18 +39,25 @@ namespace ImageProcessor.Admin.ViewModels
 
         private readonly ObservableCollection<string> _originalImagePaths = new ObservableCollection<string>();
 
+        [ObservableProperty]
         private int _imagesPerKeyword = 3;
 
+        [ObservableProperty]
         private int _imageSearcherThreadCount = 4;
 
+        [ObservableProperty]
         private int _imageRetrieverThreadCount = 4;
 
+        [ObservableProperty]
         private bool _isSingleThreadMode = true;
 
+        [ObservableProperty]
         private bool _isMultiThreadMode;
 
+        [ObservableProperty]
         private int _imageProcessorThreadCount = 4;
 
+        [ObservableProperty]
         private int _processingMilliseconds;
 
         private readonly ObservableCollection<string> _resultImagePaths = new ObservableCollection<string>();
@@ -65,46 +68,26 @@ namespace ImageProcessor.Admin.ViewModels
         {
             RefreshConnectionStateFill();
 
-            StartReceivingKeywordsCommand = new RelayCommand(StartReceivingKeywords, () => Connection == null);
-            StopReceivingKeywordsCommand = new RelayCommand(StopReceivingKeywords, () => Connection != null);
-            ClearKeywordsCommand = new RelayCommand(ClearKeywords, () => PostedKeywords.Any());
-            SearchImagesCommand = new RelayCommand(SearchImages, () => PostedKeywords.Any());
-            ClearOriginalImagesCommand = new RelayCommand(ClearOriginalImages, () => OriginalImagePaths.Any());
-            StartProcessingCommand = new RelayCommand(StartProcessing, () => OriginalImagePaths.Any());
-            ClearResultImagesCommand = new RelayCommand(ClearResultImages, () => ResultImagePaths.Any());
-            ClearTemporaryFilesCommand = new RelayCommand(ClearTemporaryFiles);
-
             _postedKeywords.CollectionChanged += PostedKeywordsOnCollectionChanged;
             _originalImagePaths.CollectionChanged += OriginalImagePathsOnCollectionChanged;
             _resultImagePaths.CollectionChanged += ResultImagePathsOnCollectionChanged;
 
-            if (IsInDesignMode)
-            {
-                _postedKeywords.Add(new KeywordViewModel("デザイン用"));
-                _postedKeywords.Add(new KeywordViewModel("ダミー (でかい)"));
-                _postedKeywords.Add(new KeywordViewModel("キーワード"));
-                _postedKeywords.ElementAt(1).NotifyPosted();
-                _postedKeywords.ElementAt(1).NotifyPosted();
-            }
 #if DEBUG
-            else
-            {
-                _postedKeywords.Add(new KeywordViewModel("ジョジョの奇妙な冒険"));
-                _postedKeywords.Add(new KeywordViewModel("魔人ブウ"));
-                _postedKeywords.Last().NotifyPosted();
-                _postedKeywords.Last().NotifyPosted();
-                _postedKeywords.Last().NotifyPosted();
-                _postedKeywords.Last().NotifyPosted();
-                _postedKeywords.Last().NotifyPosted();
-            }
+            _postedKeywords.Add(new KeywordViewModel("ジョジョの奇妙な冒険"));
+            _postedKeywords.Add(new KeywordViewModel("魔人ブウ"));
+            _postedKeywords.Last().NotifyPosted();
+            _postedKeywords.Last().NotifyPosted();
+            _postedKeywords.Last().NotifyPosted();
+            _postedKeywords.Last().NotifyPosted();
+            _postedKeywords.Last().NotifyPosted();
 #endif
         }
 
         #region Keywords
 
-        public IDisposable Connection
+        public IDisposable? Connection
         {
-            get { return _connection; }
+            get => _connection;
             private set
             {
                 var oldValue = _connection;
@@ -113,18 +96,10 @@ namespace ImageProcessor.Admin.ViewModels
                     oldValue.Dispose();
                 }
 
-                Set(() => Connection, ref _connection, value);
+                SetProperty(ref _connection, value);
 
                 RefreshConnectionStateFill();
-                StartReceivingKeywordsCommand.RaiseCanExecuteChanged();
-                StopReceivingKeywordsCommand.RaiseCanExecuteChanged();
             }
-        }
-
-        public Brush ConnectionStateFill
-        {
-            get { return _connectionStateFill; }
-            private set { Set(() => ConnectionStateFill, ref _connectionStateFill, value); }
         }
 
         private void RefreshConnectionStateFill()
@@ -134,26 +109,26 @@ namespace ImageProcessor.Admin.ViewModels
                 : new SolidColorBrush(Colors.Red);
         }
 
-        public RelayCommand StartReceivingKeywordsCommand { get; private set; }
-
-        private async void StartReceivingKeywords()
+        [RelayCommand(CanExecute = nameof(CanStartReceivingKeywords))]
+        private async Task StartReceivingKeywords()
         {
             Debug.Assert(Connection == null, "Connection == null");
 
-            var conn = new HubConnection(Settings.Default.WebSiteUrl);
-            // Handling StateChanged event might be better than handling Closed event.
-            var closedSub =
-                Observable.FromEvent(eh => conn.Closed += eh, eh => conn.Closed -= eh)
-                          .Subscribe(_ => DispatcherHelper.CheckBeginInvokeOnUI(() => Connection = null));
+            var connection = new HubConnectionBuilder()
+                .WithUrl(Settings.Default.WebSiteUrl + "/hubs/keyword")
+                .Build();
 
-            var hubProxy = conn.CreateHubProxy("KeywordHub");
-            hubProxy.On<string>("addPostedKeyword", OnKeywordPosted);
+            connection.Closed += async (error) =>
+            {
+                await Application.Current.Dispatcher.InvokeAsync(() => Connection = null);
+            };
+
+            connection.On<string>("AddPostedKeyword", OnKeywordPosted);
 
             try
             {
-                await conn.Start();
-
-                Connection = new CompositeDisposable(closedSub, conn);
+                await connection.StartAsync();
+                Connection = connection as IDisposable;
             }
             catch (HttpRequestException)
             {
@@ -161,9 +136,11 @@ namespace ImageProcessor.Admin.ViewModels
             }
         }
 
+        private bool CanStartReceivingKeywords() => Connection == null;
+
         private void OnKeywordPosted(string keyword)
         {
-            DispatcherHelper.CheckBeginInvokeOnUI(() =>
+            Application.Current.Dispatcher.Invoke(() =>
             {
                 var existingKeyword =
                     PostedKeywords.FirstOrDefault(
@@ -177,49 +154,41 @@ namespace ImageProcessor.Admin.ViewModels
             });
         }
 
-        public RelayCommand StopReceivingKeywordsCommand { get; private set; }
-
+        [RelayCommand(CanExecute = nameof(CanStopReceivingKeywords))]
         private void StopReceivingKeywords()
         {
             Debug.Assert(Connection != null, "Connection != null");
             Connection = null;
         }
 
-        public double KeywordCountFontSize
-        {
-            get { return _keywordCountFontSize; }
-            private set { Set(() => KeywordCountFontSize, ref _keywordCountFontSize, value); }
-        }
+        private bool CanStopReceivingKeywords() => Connection != null;
 
-        public ObservableCollection<KeywordViewModel> PostedKeywords
-        {
-            get { return _postedKeywords; }
-        }
+        public ObservableCollection<KeywordViewModel> PostedKeywords => _postedKeywords;
 
-        private void PostedKeywordsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void PostedKeywordsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             // ReSharper disable PossibleLossOfFraction
             KeywordCountFontSize = SystemFonts.MessageFontSize + PostedKeywords.Count / 5;
             // ReSharper restore PossibleLossOfFraction
 
-            ClearKeywordsCommand.RaiseCanExecuteChanged();
-            StartProcessingCommand.RaiseCanExecuteChanged();
+            ClearKeywordsCommand.NotifyCanExecuteChanged();
+            SearchImagesCommand.NotifyCanExecuteChanged();
         }
 
-        public RelayCommand ClearKeywordsCommand { get; private set; }
-
+        [RelayCommand(CanExecute = nameof(CanClearKeywords))]
         private void ClearKeywords()
         {
             PostedKeywords.Clear();
         }
 
+        private bool CanClearKeywords() => PostedKeywords.Any();
+
         #endregion Keywords
 
         #region Search
 
-        public RelayCommand SearchImagesCommand { get; private set; }
-
-        private async void SearchImages()
+        [RelayCommand(CanExecute = nameof(CanSearchImages))]
+        private async Task SearchImages()
         {
             ClearOriginalImages();
 
@@ -236,7 +205,6 @@ namespace ImageProcessor.Admin.ViewModels
                 }
                 searcherChannel.CompleteAdding();
 
-                //await EnsureCloudStorage();
                 var searcherTasks = new List<Task>();
                 var subscriptions = new List<IDisposable>();
                 for (int i = 0; i < ImageSearcherThreadCount; i++)
@@ -284,8 +252,11 @@ namespace ImageProcessor.Admin.ViewModels
                         Observable.FromEventPattern<ImageRetrievedEventArgs>(
                             eh => searcher.ImageRetrieved += eh,
                             eh => searcher.ImageRetrieved -= eh)
-                                  .ObserveOnDispatcher()
-                                  .Subscribe(args => OriginalImagePaths.Add(args.EventArgs.TemporaryFilePath)));
+                                      .Subscribe(args =>
+                                  {
+                                      Application.Current.Dispatcher.Invoke(() =>
+                                          OriginalImagePaths.Add(args.EventArgs.TemporaryFilePath));
+                                  }));
 
                     retrieverTasks.Add(Task.Run(async () => await searcher.Run()));
                 }
@@ -300,37 +271,17 @@ namespace ImageProcessor.Admin.ViewModels
             }
         }
 
-        public ObservableCollection<string> OriginalImagePaths
+        private bool CanSearchImages() => PostedKeywords.Any();
+
+        public ObservableCollection<string> OriginalImagePaths => _originalImagePaths;
+
+        private void OriginalImagePathsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            get { return _originalImagePaths; }
+            ClearOriginalImagesCommand.NotifyCanExecuteChanged();
+            StartProcessingCommand.NotifyCanExecuteChanged();
         }
 
-        private void OriginalImagePathsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            ClearOriginalImagesCommand.RaiseCanExecuteChanged();
-            StartProcessingCommand.RaiseCanExecuteChanged();
-        }
-
-        public int ImagesPerKeyword
-        {
-            get { return _imagesPerKeyword; }
-            set { Set(() => ImagesPerKeyword, ref _imagesPerKeyword, value); }
-        }
-
-        public int ImageSearcherThreadCount
-        {
-            get { return _imageSearcherThreadCount; }
-            set { _imageSearcherThreadCount = value; }
-        }
-
-        public int ImageRetrieverThreadCount
-        {
-            get { return _imageRetrieverThreadCount; }
-            set { _imageRetrieverThreadCount = value; }
-        }
-
-        public RelayCommand ClearOriginalImagesCommand { get; private set; }
-
+        [RelayCommand(CanExecute = nameof(CanClearOriginalImages))]
         private void ClearOriginalImages()
         {
             foreach (var path in _originalImagePaths)
@@ -347,20 +298,24 @@ namespace ImageProcessor.Admin.ViewModels
             _originalImagePaths.Clear();
         }
 
+        private bool CanClearOriginalImages() => OriginalImagePaths.Any();
+
         #endregion Search
 
         #region Image processing
 
-        public RelayCommand StartProcessingCommand { get; private set; }
-
-        private async void StartProcessing()
+        [RelayCommand(CanExecute = nameof(CanStartProcessing))]
+        private async Task StartProcessing()
         {
             ClearResultImages();
 
             var stopwatch = Stopwatch.StartNew();
             using (Observable.Interval(TimeSpan.FromMilliseconds(500.0))
-                             .ObserveOnDispatcher()
-                             .Subscribe(args => { ProcessingMilliseconds = (int)stopwatch.ElapsedMilliseconds; }))
+                             .Subscribe(args =>
+                             {
+                                 Application.Current.Dispatcher.Invoke(() =>
+                                     ProcessingMilliseconds = (int)stopwatch.ElapsedMilliseconds);
+                             }))
             {
                 if (IsSingleThreadMode)
                 {
@@ -376,6 +331,8 @@ namespace ImageProcessor.Admin.ViewModels
             }
         }
 
+        private bool CanStartProcessing() => OriginalImagePaths.Any();
+
         private async Task StartProcessingSingleThreadAsync()
         {
             await Task.Run(async () =>
@@ -385,7 +342,7 @@ namespace ImageProcessor.Admin.ViewModels
                     try
                     {
                         var resultImgFilePath = await Models.ImageProcessor.ProcessAsync(orgImgFilePath);
-                        DispatcherHelper.CheckBeginInvokeOnUI(() => _resultImagePaths.Add(resultImgFilePath));
+                        await Application.Current.Dispatcher.InvokeAsync(() => _resultImagePaths.Add(resultImgFilePath));
                     }
                     catch (Exception ex)
                     {
@@ -413,8 +370,10 @@ namespace ImageProcessor.Admin.ViewModels
                 subscriptions.Add(
                     Observable.FromEventPattern<ImageProcessedEventArgs>(eh => processor.ImageProcessed += eh,
                                                                          eh => processor.ImageProcessed -= eh)
-                              .ObserveOnDispatcher()
-                              .Subscribe(OnImageProcessed));
+                              .Subscribe(args =>
+                              {
+                                  Application.Current.Dispatcher.Invoke(() => OnImageProcessed(args));
+                              }));
 
                 tasks.Add(Task.Run(async () => await processor.Run()));
             }
@@ -430,56 +389,14 @@ namespace ImageProcessor.Admin.ViewModels
             _resultImagePaths.Add(args.EventArgs.ResultFileName);
         }
 
-        // Azure version that didn't work...
+        public ObservableCollection<string> ResultImagePaths => _resultImagePaths;
 
-        //private async void StartProcessing()
-        //{
-        //    await EnsureCloudStorage();
-        //    foreach (var requestMessage in ProcessingRequestMessages)
-        //    {
-        //        var reqMsgJson = JsonConvert.SerializeObject(requestMessage);
-        //        await _simpleWorkerRequestQueue.AddMessageAsync(new CloudQueueMessage(reqMsgJson));
-        //        await _multithreadWorkerRequestQueue.AddMessageAsync(new CloudQueueMessage(reqMsgJson));
-        //    }
-        //    ProcessingRequestMessages.Clear();
-        //}
-
-        public bool IsSingleThreadMode
+        private void ResultImagePathsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            get { return _isSingleThreadMode; }
-            set { Set(() => IsSingleThreadMode, ref _isSingleThreadMode, value); }
+            ClearResultImagesCommand.NotifyCanExecuteChanged();
         }
 
-        public bool IsMultiThreadMode
-        {
-            get { return _isMultiThreadMode; }
-            set { Set(() => IsMultiThreadMode, ref _isMultiThreadMode, value); }
-        }
-
-        public int ImageProcessorThreadCount
-        {
-            get { return _imageProcessorThreadCount; }
-            set { Set(() => ImageProcessorThreadCount, ref _imageProcessorThreadCount, value); }
-        }
-
-        public int ProcessingMilliseconds
-        {
-            get { return _processingMilliseconds; }
-            set { Set(() => ProcessingMilliseconds, ref _processingMilliseconds, value); }
-        }
-
-        public ObservableCollection<string> ResultImagePaths
-        {
-            get { return _resultImagePaths; }
-        }
-
-        private void ResultImagePathsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            ClearResultImagesCommand.RaiseCanExecuteChanged();
-        }
-
-        public RelayCommand ClearResultImagesCommand { get; private set; }
-
+        [RelayCommand(CanExecute = nameof(CanClearResultImages))]
         private void ClearResultImages()
         {
             ProcessingMilliseconds = 0;
@@ -497,37 +414,15 @@ namespace ImageProcessor.Admin.ViewModels
             _resultImagePaths.Clear();
         }
 
+        private bool CanClearResultImages() => ResultImagePaths.Any();
+
         #endregion Image processing
 
-        public RelayCommand ClearTemporaryFilesCommand { get; private set; }
-
+        [RelayCommand]
         private void ClearTemporaryFiles()
         {
             ClearOriginalImages();
             ClearResultImages();
         }
-
-        //private async Task EnsureCloudStorage()
-        //{
-        //    if (_azureStorageObjectsInitialized) return;
-
-        //    var storageAccount = CloudStorageAccount.Parse(Settings.Default.StorageConnectionString);
-
-        //    Trace.TraceInformation("Creating original images blob container");
-        //    var blobClient = storageAccount.CreateCloudBlobClient();
-        //    _originalImagesBlobContainer = blobClient.GetContainerReference("original-images");
-        //    await _originalImagesBlobContainer.CreateIfNotExistsAsync();
-
-        //    Trace.TraceInformation("Creating simple worker request queue");
-        //    var queueClient = storageAccount.CreateCloudQueueClient();
-        //    _simpleWorkerRequestQueue = queueClient.GetQueueReference("simple-worker-requests");
-        //    await _simpleWorkerRequestQueue.CreateIfNotExistsAsync();
-
-        //    Trace.TraceInformation("Creating multi-thread worker request queue");
-        //    _multithreadWorkerRequestQueue = queueClient.GetQueueReference("multithread-worker-requests");
-        //    await _multithreadWorkerRequestQueue.CreateIfNotExistsAsync();
-
-        //    _azureStorageObjectsInitialized = true;
-        //}
     }
 }
