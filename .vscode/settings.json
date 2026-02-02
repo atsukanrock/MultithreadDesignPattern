@@ -1,0 +1,50 @@
+{
+    // ファイル除外設定
+    "files.exclude": {
+        "**/bin": true,
+        "**/obj": true,
+        "**/.vs": true,
+        "**/packages": true
+    },
+
+    // ファイル監視除外
+    "files.watcherExclude": {
+        "**/bin/**": true,
+        "**/obj/**": true,
+        "**/packages/**": true
+    },
+
+    // C# 設定
+    "csharp.semanticHighlighting.enabled": true,
+    "csharp.suppressDotnetRestoreNotification": false,
+
+    // エディタ設定
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+
+    // OmniSharp 設定（.NET Framework サポート）
+    "omnisharp.enableMsBuildLoadProjectsOnDemand": true,
+    "omnisharp.enableEditorConfigSupport": true,
+    "omnisharp.enableRoslynAnalyzers": true,
+    "omnisharp.useModernNet": false,
+
+    // ターミナル設定（WSL2 使用時）
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+
+    // ファイル関連付け
+    "files.associations": {
+        "*.cshtml": "html",
+        "*.csproj": "xml",
+        "*.config": "xml",
+        "*.csdef": "xml",
+        "*.cscfg": "xml"
+    },
+
+    // タスクの自動検出
+    "task.autoDetect": "on",
+
+    // .NET 8 プロジェクト用の設定（移行後）
+    "dotnet.defaultSolution": "MultithreadDesignPattern.sln"
+}

@@ -1,0 +1,32 @@
+{
+    "recommendations": [
+        // C# 開発に必須
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+
+        // .NET 開発支援
+        "kreativ-software.csharpextensions",
+        "jchannon.csharpextensions",
+
+        // Web 開発（ASP.NET 用）
+        "ms-vscode.vscode-typescript-next",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+
+        // Azure 開発
+        "ms-azuretools.vscode-azurefunctions",
+        "ms-azuretools.vscode-azureappservice",
+        "ms-azuretools.vscode-azurestorage",
+
+        // Git 支援
+        "eamodio.gitlens",
+
+        // その他便利な拡張機能
+        "editorconfig.editorconfig",
+        "streetsidesoftware.code-spell-checker",
+        "visualstudioexptteam.vscodeintellicode",
+
+        // XML 編集（.csproj, .config ファイル用）
+        "redhat.vscode-xml"
+    ]
+}

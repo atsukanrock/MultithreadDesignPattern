@@ -1,0 +1,100 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        // .NET 8 Web プロジェクト（移行後）
+        {
+            "name": ".NET 8: Web (移行後)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-dotnet8",
+            "program": "${workspaceFolder}/ImageProcessor.Web/bin/Debug/net8.0/ImageProcessor.Web.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/ImageProcessor.Web",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/ImageProcessor.Web/Views"
+            }
+        },
+        // .NET 8 Worker Service（移行後）
+        {
+            "name": ".NET 8: SimpleWorker (移行後)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-dotnet8",
+            "program": "${workspaceFolder}/ImageProcessor.SimpleWorker/bin/Debug/net8.0/ImageProcessor.SimpleWorker.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/ImageProcessor.SimpleWorker",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
+            "name": ".NET 8: MultithreadWorker (移行後)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-dotnet8",
+            "program": "${workspaceFolder}/ImageProcessor.MultithreadWorker/bin/Debug/net8.0/ImageProcessor.MultithreadWorker.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/ImageProcessor.MultithreadWorker",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        // .NET Framework プロジェクト（Windows のみ）
+        {
+            "name": ".NET Framework: Web (Windows)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-web-framework",
+            "program": "${workspaceFolder}/ImageProcessor.Web/bin/ImageProcessor.Web.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/ImageProcessor.Web",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "windows": {
+                "type": "clr"
+            }
+        },
+        // コンソールアプリケーション（既存の .NET Framework）
+        {
+            "name": ".NET Framework: ProducerConsumer Console",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-framework",
+            "program": "${workspaceFolder}/ProducerConsumer.ConsoleApp/bin/Debug/ProducerConsumer.ConsoleApp.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/ProducerConsumer.ConsoleApp",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "windows": {
+                "type": "clr"
+            }
+        },
+        {
+            "name": ".NET Framework: MultithreadDesignPattern Console",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-framework",
+            "program": "${workspaceFolder}/MultithreadDesignPattern/bin/Debug/MultithreadDesignPattern.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/MultithreadDesignPattern",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "windows": {
+                "type": "clr"
+            }
+        },
+        // アタッチ設定
+        {
+            "name": ".NET: プロセスにアタッチ",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ]
+}

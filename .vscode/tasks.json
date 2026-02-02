@@ -1,0 +1,117 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // .NET Framework プロジェクト用（Windows）
+        {
+            "label": "build-framework",
+            "command": "msbuild",
+            "type": "shell",
+            "args": [
+                "/p:Configuration=Debug",
+                "/p:Platform=\"Any CPU\"",
+                "MultithreadDesignPattern.sln"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "detail": ".NET Framework プロジェクトをビルド（Windows のみ）"
+        },
+        {
+            "label": "clean-framework",
+            "command": "msbuild",
+            "type": "shell",
+            "args": [
+                "/t:Clean",
+                "/p:Configuration=Debug",
+                "MultithreadDesignPattern.sln"
+            ],
+            "problemMatcher": "$msCompile",
+            "detail": ".NET Framework プロジェクトをクリーン"
+        },
+        // .NET 8 プロジェクト用（クロスプラットフォーム）
+        {
+            "label": "build-dotnet8",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "silent"
+            },
+            "detail": ".NET 8 プロジェクトをビルド（Linux/Windows/macOS）"
+        },
+        {
+            "label": "watch-dotnet8",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}"
+            ],
+            "problemMatcher": "$msCompile",
+            "detail": ".NET 8 プロジェクトを監視モードで実行"
+        },
+        {
+            "label": "clean-dotnet8",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "clean",
+                "${workspaceFolder}"
+            ],
+            "problemMatcher": "$msCompile",
+            "detail": ".NET 8 プロジェクトをクリーン"
+        },
+        // 個別プロジェクトのビルド
+        {
+            "label": "build-web-framework",
+            "command": "msbuild",
+            "type": "shell",
+            "args": [
+                "/p:Configuration=Debug",
+                "ImageProcessor.Web/ImageProcessor.Web.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "detail": "Web プロジェクトのみビルド（.NET Framework）"
+        },
+        {
+            "label": "build-simpleworker-framework",
+            "command": "msbuild",
+            "type": "shell",
+            "args": [
+                "/p:Configuration=Debug",
+                "ImageProcessor.SimpleWorker/ImageProcessor.SimpleWorker.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "detail": "SimpleWorker のみビルド（.NET Framework）"
+        },
+        {
+            "label": "restore-nuget",
+            "command": "nuget",
+            "type": "shell",
+            "args": [
+                "restore",
+                "MultithreadDesignPattern.sln"
+            ],
+            "problemMatcher": [],
+            "detail": "NuGet パッケージの復元（.NET Framework）"
+        }
+    ]
+}
