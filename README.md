@@ -22,12 +22,12 @@ MultithreadDesignPattern/
 ├── ImageProcessor.MultithreadWorker/ # マルチスレッド Worker (net8.0)
 ├── ImageProcessor.SearchWorker/    # 画像検索 Worker (net8.0)
 ├── ImageProcessor.Admin/           # WPF 管理ツール (net8.0-windows)
-└── ImageProcessor.Web/             # Web UI (.NET Framework 4.5) ⚠️ 未移行
+└── ImageProcessor.Web/             # ASP.NET Core Web UI (net8.0) ✅
 ```
 
 ## 技術スタック
 
-### .NET 8 移行済みプロジェクト (6/7)
+### .NET 8 移行完了 (7/7) ✅
 
 | プロジェクト | フレームワーク | 主要技術 |
 |------------|--------------|---------|
@@ -37,13 +37,15 @@ MultithreadDesignPattern/
 | MultithreadWorker | .NET 8 | Worker Service, System.Threading.Channels |
 | SearchWorker | .NET 8 | Worker Service, Bing Search API |
 | ImageProcessor.Admin | .NET 8 (Windows) | WPF, MVVM, SignalR Client, Reactive Extensions |
+| ImageProcessor.Web | .NET 8 | ASP.NET Core MVC, SignalR, Web API |
 
 ### 使用ライブラリ (.NET 8)
 
 - **UI**: MahApps.Metro 2.4, CommunityToolkit.Mvvm 8.2
+- **Web**: ASP.NET Core MVC, SignalR 8.0
 - **画像処理**: SixLabors.ImageSharp 3.1
 - **Azure**: Azure.Storage.Blobs 12.x, Azure.Storage.Queues 12.x
-- **リアルタイム通信**: Microsoft.AspNetCore.SignalR.Client 8.0
+- **リアルタイム通信**: Microsoft.AspNetCore.SignalR 8.0 (Server/Client)
 - **リアクティブ**: System.Reactive 6.0
 
 ## クイックスタート
@@ -77,7 +79,16 @@ dotnet build
 dotnet run --project ImageProcessor.Admin
 ```
 
-#### 2. Worker Services
+#### 2. ImageProcessor.Web (ASP.NET Core アプリ)
+
+```bash
+# Web アプリケーションの起動
+dotnet run --project ImageProcessor.Web
+
+# ブラウザで http://localhost:5000 にアクセス
+```
+
+#### 3. Worker Services
 
 ```bash
 # シングルスレッド Worker
@@ -189,10 +200,11 @@ Observable.FromEventPattern<ImageProcessedEventArgs>(
 
 ## 今後の予定
 
-- [ ] ImageProcessor.Web を ASP.NET Core 8.0 に移行
+- [x] ImageProcessor.Web を ASP.NET Core 8.0 に移行 ✅
 - [ ] 完全な統合テストの実装
 - [ ] パフォーマンスベンチマークの実施
 - [ ] Azure へのデプロイ自動化
+- [ ] Docker コンテナ化
 
 ## トラブルシューティング
 
@@ -213,6 +225,8 @@ Observable.FromEventPattern<ImageProcessedEventArgs>(
 
 ---
 
-**移行進捗**: 6/7 プロジェクト完了 (85.7%) 🎉
+**移行進捗**: 7/7 プロジェクト完了 (100%) 🎉✅
 
-最終更新: 2026-02-03
+全プロジェクトの .NET 8 移行が完了しました！
+
+最終更新: 2026-02-05
