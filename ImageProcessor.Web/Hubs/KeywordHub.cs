@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNet.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 
-namespace ImageProcessor.Web.Hubs
+namespace ImageProcessor.Web.Hubs;
+
+public class KeywordHub : Hub
 {
-    public class KeywordHub : Hub
+    public async Task Post(string keyword)
     {
-        public void Post(string keyword)
-        {
-            Clients.All.addPostedKeyword(keyword);
-        }
+        await Clients.All.SendAsync("addPostedKeyword", keyword);
     }
 }

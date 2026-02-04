@@ -1,34 +1,38 @@
-﻿using System.Web.Mvc;
-using ImageProcessor.Web.Hubs;
+﻿using Microsoft.AspNetCore.Mvc;
 using ImageProcessor.Web.Models.Home;
 
-namespace ImageProcessor.Web.Controllers
+namespace ImageProcessor.Web.Controllers;
+
+public class HomeController : Controller
 {
-    public class HomeController : Controller
+    [HttpGet]
+    public IActionResult Index()
     {
-        [HttpGet]
-        public ActionResult Index()
-        {
-            return View(new IndexViewModel());
-        }
+        return View(new IndexViewModel());
+    }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Index(IndexViewModel viewModel)
-        {
-            var keyword = viewModel.Keyword;
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Index(IndexViewModel viewModel)
+    {
+        var keyword = viewModel.Keyword;
 
-            // Push the keyword to SignalR client on the admin WPF app.
+        // Push the keyword to SignalR client on the admin WPF app.
 
-            //if (!string.IsNullOrEmpty(viewModel.AcceptedKeywordsJson))
-            //{
-            //    viewModel.AcceptedKeywords.AddRange(
-            //        JsonConvert.DeserializeObject<IEnumerable<string>>(viewModel.AcceptedKeywordsJson));
-            //}
-            //viewModel.AcceptedKeywords.Add(keyword);
-            //viewModel.AcceptedKeywordsJson = JsonConvert.SerializeObject(viewModel.AcceptedKeywords);
+        //if (!string.IsNullOrEmpty(viewModel.AcceptedKeywordsJson))
+        //{
+        //    viewModel.AcceptedKeywords.AddRange(
+        //        JsonConvert.DeserializeObject<IEnumerable<string>>(viewModel.AcceptedKeywordsJson));
+        //}
+        //viewModel.AcceptedKeywords.Add(keyword);
+        //viewModel.AcceptedKeywordsJson = JsonConvert.SerializeObject(viewModel.AcceptedKeywords);
 
-            return View(viewModel);
-        }
+        return View(viewModel);
+    }
+
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View();
     }
 }
