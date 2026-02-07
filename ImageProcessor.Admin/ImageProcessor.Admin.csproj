@@ -22,15 +22,15 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
 
     <!-- Azure Storage -->
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.0" />
-    <PackageReference Include="Azure.Storage.Queues" Version="12.17.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.22.1" />
+    <PackageReference Include="Azure.Storage.Queues" Version="12.20.1" />
 
     <!-- Reactive Extensions -->
     <PackageReference Include="System.Reactive" Version="6.0.0" />
     <PackageReference Include="System.Reactive.Windows.Threading" Version="6.0.0" />
 
     <!-- Image Processing -->
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
 
     <!-- JSON -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

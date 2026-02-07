@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProducerConsumer.ConsoleApp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSearchTest", "ImageSearchTest\ImageSearchTest.csproj", "{6C8B5E99-44C0-4439-950A-A28EC89F1403}"
 EndProject
-Project("{CC5FD16D-436D-48AD-A40C-5A424C6E3E79}") = "ImageProcessor.CloudService", "ImageProcessor.CloudService\ImageProcessor.CloudService.ccproj", "{37D56F53-6FB5-47D9-B555-5BCF69F5936F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessor.SimpleWorker", "ImageProcessor.SimpleWorker\ImageProcessor.SimpleWorker.csproj", "{7BD7A9BB-7BAF-4425-AB92-169ACD1E29BC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessor.MultithreadWorker", "ImageProcessor.MultithreadWorker\ImageProcessor.MultithreadWorker.csproj", "{9004BFD8-DBB7-4987-B882-12CAD72B64BF}"
@@ -52,10 +50,6 @@ Global
 		{6C8B5E99-44C0-4439-950A-A28EC89F1403}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C8B5E99-44C0-4439-950A-A28EC89F1403}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C8B5E99-44C0-4439-950A-A28EC89F1403}.Release|Any CPU.Build.0 = Release|Any CPU
-		{37D56F53-6FB5-47D9-B555-5BCF69F5936F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37D56F53-6FB5-47D9-B555-5BCF69F5936F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37D56F53-6FB5-47D9-B555-5BCF69F5936F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37D56F53-6FB5-47D9-B555-5BCF69F5936F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7BD7A9BB-7BAF-4425-AB92-169ACD1E29BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7BD7A9BB-7BAF-4425-AB92-169ACD1E29BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7BD7A9BB-7BAF-4425-AB92-169ACD1E29BC}.Release|Any CPU.ActiveCfg = Release|Any CPU

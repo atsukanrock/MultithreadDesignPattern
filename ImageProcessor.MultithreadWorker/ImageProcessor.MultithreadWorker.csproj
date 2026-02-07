@@ -17,11 +17,11 @@
 
   <ItemGroup>
     <!-- 新しい Azure Storage SDK -->
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.0" />
-    <PackageReference Include="Azure.Storage.Queues" Version="12.17.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.22.1" />
+    <PackageReference Include="Azure.Storage.Queues" Version="12.20.1" />
 
     <!-- ImageSharp (ImageProcessor の代替) -->
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
 
     <!-- JSON シリアライゼーション -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
