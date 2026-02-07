@@ -424,5 +424,16 @@ namespace ImageProcessor.Admin.ViewModels
             ClearOriginalImages();
             ClearResultImages();
         }
+
+        #region Theme
+
+        [RelayCommand]
+        private void ToggleTheme()
+        {
+            var app = Application.Current as App;
+            app?.ToggleTheme();
+        }
+
+        #endregion Theme
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace ImageProcessor.Admin
@@ -9,14 +10,109 @@ namespace ImageProcessor.Admin
     /// </summary>
     public partial class App
     {
+        private bool _isDarkTheme = false;
+
         protected override void OnStartup(StartupEventArgs e)
         {
             // グローバル例外ハンドラを設定
             DispatcherUnhandledException += OnDispatcherUnhandledException;
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
+            // 保存されたテーマ設定を読み込み
+            LoadThemeSettings();
+
             base.OnStartup(e);
         }
+
+        private void LoadThemeSettings()
+        {
+            // App.config からテーマ設定を読み込む
+            var isDark = ImageProcessor.Admin.Properties.Settings.Default.IsDarkTheme;
+            if (isDark)
+            {
+                ApplyDarkTheme();
+            }
+        }
+
+        public void ToggleTheme()
+        {
+            _isDarkTheme = !_isDarkTheme;
+
+            if (_isDarkTheme)
+            {
+                ApplyDarkTheme();
+            }
+            else
+            {
+                ApplyLightTheme();
+            }
+
+            // 設定を保存
+            ImageProcessor.Admin.Properties.Settings.Default.IsDarkTheme = _isDarkTheme;
+            ImageProcessor.Admin.Properties.Settings.Default.Save();
+        }
+
+        private void ApplyDarkTheme()
+        {
+            _isDarkTheme = true;
+
+            // ダークテーマのカラーパレット
+            UpdateResource("FluentAccentBrush", "#0078D4");
+            UpdateResource("FluentAccentLightBrush", "#1890D4");
+            UpdateResource("FluentBackgroundBrush", "#1E1E1E");
+            UpdateResource("FluentCardBrush", "#2D2D2D");
+            UpdateResource("FluentBorderBrush", "#3F3F3F");
+            UpdateResource("FluentTextBrush", "#FFFFFF");
+            UpdateResource("FluentTextSecondaryBrush", "#B4B4B4");
+            UpdateResource("FluentSuccessBrush", "#6CCB5F");
+            UpdateResource("FluentWarningBrush", "#FFA500");
+            UpdateResource("FluentHoverBrush", "#3F3F3F");
+            UpdateResource("FluentMetricBackgroundBrush", "#3A3A3A");
+
+            // MahApps.Metro のダークテーマを適用
+            var theme = Resources.MergedDictionaries[0];
+            theme.MergedDictionaries.Clear();
+            theme.MergedDictionaries.Add(new ResourceDictionary
+            {
+                Source = new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Blue.xaml")
+            });
+        }
+
+        private void ApplyLightTheme()
+        {
+            _isDarkTheme = false;
+
+            // ライトテーマのカラーパレット
+            UpdateResource("FluentAccentBrush", "#0078D4");
+            UpdateResource("FluentAccentLightBrush", "#1890D4");
+            UpdateResource("FluentBackgroundBrush", "#F3F3F3");
+            UpdateResource("FluentCardBrush", "#FFFFFF");
+            UpdateResource("FluentBorderBrush", "#E1E1E1");
+            UpdateResource("FluentTextBrush", "#1F1F1F");
+            UpdateResource("FluentTextSecondaryBrush", "#605E5C");
+            UpdateResource("FluentSuccessBrush", "#107C10");
+            UpdateResource("FluentWarningBrush", "#FFA500");
+            UpdateResource("FluentHoverBrush", "#F0F8FF");
+            UpdateResource("FluentMetricBackgroundBrush", "#F0F0F0");
+
+            // MahApps.Metro のライトテーマを適用
+            var theme = Resources.MergedDictionaries[0];
+            theme.MergedDictionaries.Clear();
+            theme.MergedDictionaries.Add(new ResourceDictionary
+            {
+                Source = new Uri("pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml")
+            });
+        }
+
+        private void UpdateResource(string key, string colorHex)
+        {
+            if (Resources.Contains(key))
+            {
+                Resources[key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorHex));
+            }
+        }
+
+        public bool IsDarkTheme => _isDarkTheme;
 
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {

@@ -9,9 +9,9 @@
                       Width="1600"
                       Height="900"
                       WindowStartupLocation="CenterScreen"
-                      Background="{StaticResource FluentBackgroundBrush}"
+                      Background="{DynamicResource FluentBackgroundBrush}"
                       BorderThickness="0"
-                      GlowBrush="{StaticResource FluentAccentBrush}">
+                      GlowBrush="{DynamicResource FluentAccentBrush}">
     <controls:MetroWindow.DataContext>
         <viewModels:MainViewModel />
     </controls:MetroWindow.DataContext>
@@ -46,6 +46,13 @@
                              Margin="0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Command="{Binding ToggleThemeCommand}"
+                          Style="{StaticResource FluentThemeToggleButton}"
+                          ToolTip="テーマ切り替え"
+                          Margin="0,0,16,0">
+                        <iconPacks:PackIconMaterial Kind="Brightness6"
+                                                  Width="20" Height="20"/>
+                    </Button>
                     <Ellipse Fill="{Binding ConnectionStateFill}"
                            Width="12" Height="12"
                            VerticalAlignment="Center"

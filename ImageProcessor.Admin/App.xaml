@@ -10,14 +10,14 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
 
-                <!-- Fluent Design inspired テーマ - Light モード -->
+                <!-- デフォルトはライトテーマ -->
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Converters -->
             <converters:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
 
-            <!-- Fluent Design カラーパレット -->
+            <!-- ライトテーマ カラーパレット -->
             <SolidColorBrush x:Key="FluentAccentBrush" Color="#0078D4"/>
             <SolidColorBrush x:Key="FluentAccentLightBrush" Color="#1890D4"/>
             <SolidColorBrush x:Key="FluentBackgroundBrush" Color="#F3F3F3"/>
@@ -27,11 +27,13 @@
             <SolidColorBrush x:Key="FluentTextSecondaryBrush" Color="#605E5C"/>
             <SolidColorBrush x:Key="FluentSuccessBrush" Color="#107C10"/>
             <SolidColorBrush x:Key="FluentWarningBrush" Color="#FFA500"/>
+            <SolidColorBrush x:Key="FluentHoverBrush" Color="#F0F8FF"/>
+            <SolidColorBrush x:Key="FluentMetricBackgroundBrush" Color="#F0F0F0"/>
 
             <!-- Fluent Design カードスタイル -->
             <Style x:Key="FluentCard" TargetType="Border">
-                <Setter Property="Background" Value="{StaticResource FluentCardBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource FluentBorderBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource FluentCardBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource FluentBorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="CornerRadius" Value="8"/>
                 <Setter Property="Padding" Value="16"/>
@@ -49,7 +51,7 @@
 
             <!-- Fluent Design ボタンスタイル -->
             <Style x:Key="FluentButton" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button}">
-                <Setter Property="Background" Value="{StaticResource FluentAccentBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource FluentAccentBrush}"/>
                 <Setter Property="Foreground" Value="White"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Padding" Value="16,8"/>
@@ -59,7 +61,7 @@
                 <Setter Property="Cursor" Value="Hand"/>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="{StaticResource FluentAccentLightBrush}"/>
+                        <Setter Property="Background" Value="{DynamicResource FluentAccentLightBrush}"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>
@@ -67,8 +69,8 @@
             <!-- Fluent Design セカンダリボタンスタイル -->
             <Style x:Key="FluentButtonSecondary" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button}">
                 <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Foreground" Value="{StaticResource FluentAccentBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource FluentAccentBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource FluentAccentBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource FluentAccentBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Padding" Value="16,8"/>
                 <Setter Property="FontSize" Value="14"/>
@@ -76,7 +78,22 @@
                 <Setter Property="Cursor" Value="Hand"/>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="#F0F8FF"/>
+                        <Setter Property="Background" Value="{DynamicResource FluentHoverBrush}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Fluent Design テーマ切り替えボタン -->
+            <Style x:Key="FluentThemeToggleButton" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button}">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{DynamicResource FluentTextBrush}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Width" Value="40"/>
+                <Setter Property="Height" Value="40"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource FluentHoverBrush}"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>
@@ -127,22 +144,29 @@
             <Style x:Key="FluentSectionHeader" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="18"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
-                <Setter Property="Foreground" Value="{StaticResource FluentTextBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource FluentTextBrush}"/>
                 <Setter Property="Margin" Value="0,0,0,12"/>
             </Style>
 
             <!-- Fluent Design メトリクステキスト -->
             <Style x:Key="FluentMetricLabel" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="13"/>
-                <Setter Property="Foreground" Value="{StaticResource FluentTextSecondaryBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource FluentTextSecondaryBrush}"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
             </Style>
 
             <Style x:Key="FluentMetricValue" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="16"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
-                <Setter Property="Foreground" Value="{StaticResource FluentAccentBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource FluentAccentBrush}"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <!-- メトリック背景スタイル -->
+            <Style x:Key="FluentMetricBackground" TargetType="Border">
+                <Setter Property="Background" Value="{DynamicResource FluentMetricBackgroundBrush}"/>
+                <Setter Property="CornerRadius" Value="4"/>
+                <Setter Property="Padding" Value="12,6"/>
             </Style>
 
             <!-- アニメーション用のストーリーボード -->
