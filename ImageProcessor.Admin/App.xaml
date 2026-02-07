@@ -6,12 +6,155 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- MahApps.Metro 2.x のリソース -->
+                <!-- MahApps.Metro リソース -->
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+
+                <!-- Fluent Design inspired テーマ - Light モード -->
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Converters -->
             <converters:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
+
+            <!-- Fluent Design カラーパレット -->
+            <SolidColorBrush x:Key="FluentAccentBrush" Color="#0078D4"/>
+            <SolidColorBrush x:Key="FluentAccentLightBrush" Color="#1890D4"/>
+            <SolidColorBrush x:Key="FluentBackgroundBrush" Color="#F3F3F3"/>
+            <SolidColorBrush x:Key="FluentCardBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="FluentBorderBrush" Color="#E1E1E1"/>
+            <SolidColorBrush x:Key="FluentTextBrush" Color="#1F1F1F"/>
+            <SolidColorBrush x:Key="FluentTextSecondaryBrush" Color="#605E5C"/>
+            <SolidColorBrush x:Key="FluentSuccessBrush" Color="#107C10"/>
+            <SolidColorBrush x:Key="FluentWarningBrush" Color="#FFA500"/>
+
+            <!-- Fluent Design カードスタイル -->
+            <Style x:Key="FluentCard" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource FluentCardBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource FluentBorderBrush}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="Padding" Value="16"/>
+                <Setter Property="Margin" Value="8"/>
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect Color="#000000"
+                                        Direction="270"
+                                        ShadowDepth="2"
+                                        BlurRadius="8"
+                                        Opacity="0.08"/>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Fluent Design ボタンスタイル -->
+            <Style x:Key="FluentButton" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button}">
+                <Setter Property="Background" Value="{StaticResource FluentAccentBrush}"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="16,8"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="MinWidth" Value="100"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{StaticResource FluentAccentLightBrush}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Fluent Design セカンダリボタンスタイル -->
+            <Style x:Key="FluentButtonSecondary" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button}">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{StaticResource FluentAccentBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource FluentAccentBrush}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="16,8"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="MinWidth" Value="100"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#F0F8FF"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Fluent Design 接続状態インジケーター -->
+            <Style x:Key="FluentConnectionIndicator" TargetType="Ellipse">
+                <Setter Property="Width" Value="12"/>
+                <Setter Property="Height" Value="12"/>
+                <Setter Property="StrokeThickness" Value="0"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding ConnectionState}" Value="Connected">
+                        <Setter Property="Fill" Value="{StaticResource FluentSuccessBrush}"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding ConnectionState}" Value="Disconnected">
+                        <Setter Property="Fill" Value="#D13438"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding ConnectionState}" Value="Connecting">
+                        <Setter Property="Fill" Value="{StaticResource FluentWarningBrush}"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Fluent Design キーワードチップスタイル -->
+            <Style x:Key="FluentKeywordChip" TargetType="Border">
+                <Setter Property="Background" Value="#E3F2FD"/>
+                <Setter Property="BorderBrush" Value="#90CAF9"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="16"/>
+                <Setter Property="Padding" Value="16,6"/>
+                <Setter Property="Margin" Value="6,6,0,0"/>
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect Color="#000000"
+                                        Direction="270"
+                                        ShadowDepth="1"
+                                        BlurRadius="4"
+                                        Opacity="0.1"/>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#BBDEFB"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Fluent Design セクションヘッダー -->
+            <Style x:Key="FluentSectionHeader" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="18"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Foreground" Value="{StaticResource FluentTextBrush}"/>
+                <Setter Property="Margin" Value="0,0,0,12"/>
+            </Style>
+
+            <!-- Fluent Design メトリクステキスト -->
+            <Style x:Key="FluentMetricLabel" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Foreground" Value="{StaticResource FluentTextSecondaryBrush}"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <Style x:Key="FluentMetricValue" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Foreground" Value="{StaticResource FluentAccentBrush}"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <!-- アニメーション用のストーリーボード -->
+            <Storyboard x:Key="FadeInAnimation">
+                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                               From="0" To="1" Duration="0:0:0.3">
+                    <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseOut"/>
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+            </Storyboard>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>
