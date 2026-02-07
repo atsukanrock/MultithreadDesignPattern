@@ -36,8 +36,8 @@
                 <Setter Property="BorderBrush" Value="{DynamicResource FluentBorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Padding" Value="16"/>
-                <Setter Property="Margin" Value="8"/>
+                <Setter Property="Padding" Value="24"/>
+                <Setter Property="Margin" Value="12"/>
                 <Setter Property="Effect">
                     <Setter.Value>
                         <DropShadowEffect Color="#000000"

@@ -6,8 +6,8 @@
                       xmlns:viewModels="clr-namespace:ImageProcessor.Admin.ViewModels"
                       xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
                       Title="Image Processor Admin"
-                      Width="1600"
-                      Height="900"
+                      Width="1920"
+                      Height="1080"
                       WindowStartupLocation="CenterScreen"
                       Background="{DynamicResource FluentBackgroundBrush}"
                       BorderThickness="0"
@@ -22,7 +22,7 @@
         </i:EventTrigger>
     </i:Interaction.Triggers>
 
-    <Grid Margin="16">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -92,7 +92,7 @@
                         <Button Content="受信開始"
                               Command="{Binding StartReceivingKeywordsCommand}"
                               Style="{StaticResource FluentButton}"
-                              Margin="0,0,8,0">
+                              Margin="0,0,12,0">
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -107,7 +107,7 @@
                         <Button Content="停止"
                               Command="{Binding StopReceivingKeywordsCommand}"
                               Style="{StaticResource FluentButtonSecondary}"
-                              Margin="0,0,24,0">
+                              Margin="0,0,32,0">
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -120,13 +120,14 @@
                             </Button.ContentTemplate>
                         </Button>
 
-                        <Border Background="#F0F0F0"
+                        <Border Background="{DynamicResource FluentMetricBackgroundBrush}"
                               CornerRadius="4"
                               Padding="12,6"
                               VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="受信済み:"
                                          Style="{StaticResource FluentMetricLabel}"
+                                         VerticalAlignment="Center"
                                          Margin="0,0,8,0"/>
                                 <TextBlock Text="{Binding PostedKeywords.Count}"
                                          Style="{StaticResource FluentMetricValue}"/>
@@ -207,11 +208,16 @@
                 </StackPanel>
 
                 <Grid>
-                    <StackPanel Orientation="Horizontal">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Grid.Column="0">
                         <Button Content="収集開始"
                               Command="{Binding SearchImagesCommand}"
                               Style="{StaticResource FluentButton}"
-                              Margin="0,0,24,0">
+                              Margin="0,0,32,0">
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -224,31 +230,47 @@
                             </Button.ContentTemplate>
                         </Button>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
-                            <TextBlock Text="画像数/キーワード:"
+                        <StackPanel Orientation="Horizontal" Margin="0,0,32,0">
+                            <TextBlock Text="画像数:"
                                      Style="{StaticResource FluentMetricLabel}"
+                                     VerticalAlignment="Center"
                                      Margin="0,0,8,0"/>
                             <controls:NumericUpDown Value="{Binding ImagesPerKeyword}"
                                                   Minimum="1" Maximum="255"
-                                                  Width="80"/>
+                                                  Width="100"
+                                                  VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
-                            <TextBlock Text="検索スレッド:"
+                        <StackPanel Orientation="Horizontal" Margin="0,0,32,0">
+                            <TextBlock Text="検索:"
                                      Style="{StaticResource FluentMetricLabel}"
+                                     VerticalAlignment="Center"
                                      Margin="0,0,8,0"/>
                             <controls:NumericUpDown Value="{Binding ImageSearcherThreadCount}"
                                                   Minimum="1" Maximum="255"
-                                                  Width="80"/>
+                                                  Width="100"
+                                                  VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <Border Background="#F0F0F0"
+                        <StackPanel Orientation="Horizontal" Margin="0,0,32,0">
+                            <TextBlock Text="DL:"
+                                     Style="{StaticResource FluentMetricLabel}"
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,8,0"/>
+                            <controls:NumericUpDown Value="{Binding ImageRetrieverThreadCount}"
+                                                  Minimum="1" Maximum="255"
+                                                  Width="100"
+                                                  VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Border Background="{DynamicResource FluentMetricBackgroundBrush}"
                               CornerRadius="4"
-                              Padding="12,6">
+                              Padding="12,6"
+                              VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
                                 <iconPacks:PackIconMaterial Kind="Image"
                                                           Width="16" Height="16"
-                                                          Foreground="{StaticResource FluentAccentBrush}"
+                                                          Foreground="{DynamicResource FluentAccentBrush}"
                                                           VerticalAlignment="Center"
                                                           Margin="0,0,8,0"/>
                                 <TextBlock Text="{Binding OriginalImagePaths.Count, StringFormat='#,##0'}"
@@ -307,7 +329,7 @@
                         <Button Content="処理開始"
                               Command="{Binding StartProcessingCommand}"
                               Style="{StaticResource FluentButton}"
-                              Margin="0,0,24,0">
+                              Margin="0,0,32,0">
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -320,58 +342,64 @@
                             </Button.ContentTemplate>
                         </Button>
 
-                        <Border Background="#F8F8F8"
+                        <Border Background="{DynamicResource FluentMetricBackgroundBrush}"
                               CornerRadius="4"
                               Padding="12,8"
-                              Margin="0,0,24,0">
+                              Margin="0,0,32,0"
+                              VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton Content="シングルスレッド"
+                                <RadioButton Content="シングル"
                                            IsChecked="{Binding IsSingleThreadMode}"
                                            GroupName="ThreadMode"
                                            VerticalAlignment="Center"
                                            Margin="0,0,16,0"/>
-                                <RadioButton Content="マルチスレッド"
+                                <RadioButton Content="マルチ"
                                            IsChecked="{Binding IsMultiThreadMode}"
                                            GroupName="ThreadMode"
                                            VerticalAlignment="Center"
                                            Margin="0,0,16,0"/>
                                 <StackPanel Orientation="Horizontal"
                                           IsEnabled="{Binding IsMultiThreadMode}">
-                                    <TextBlock Text="スレッド数:"
+                                    <TextBlock Text="数:"
                                              Style="{StaticResource FluentMetricLabel}"
+                                             VerticalAlignment="Center"
                                              Margin="0,0,8,0"/>
                                     <controls:NumericUpDown Value="{Binding ImageProcessorThreadCount}"
                                                           Minimum="1" Maximum="255"
-                                                          Width="80"/>
+                                                          Width="100"
+                                                          VerticalAlignment="Center"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#F0F0F0"
+                        <Border Background="{DynamicResource FluentMetricBackgroundBrush}"
                               CornerRadius="4"
                               Padding="12,6"
-                              Margin="0,0,16,0">
+                              Margin="0,0,16,0"
+                              VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
                                 <iconPacks:PackIconMaterial Kind="CheckCircle"
                                                           Width="16" Height="16"
                                                           Foreground="{StaticResource FluentSuccessBrush}"
                                                           VerticalAlignment="Center"
                                                           Margin="0,0,8,0"/>
-                                <TextBlock Text="処理済み:"
+                                <TextBlock Text="完了:"
                                          Style="{StaticResource FluentMetricLabel}"
+                                         VerticalAlignment="Center"
                                          Margin="0,0,8,0"/>
                                 <TextBlock Text="{Binding ResultImagePaths.Count, StringFormat='#,##0'}"
                                          Style="{StaticResource FluentMetricValue}"/>
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#F0F0F0"
+                        <Border Background="{DynamicResource FluentMetricBackgroundBrush}"
                               CornerRadius="4"
-                              Padding="12,6">
+                              Padding="12,6"
+                              VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
                                 <iconPacks:PackIconMaterial Kind="Timer"
                                                           Width="16" Height="16"
-                                                          Foreground="{StaticResource FluentAccentBrush}"
+                                                          Foreground="{DynamicResource FluentAccentBrush}"
                                                           VerticalAlignment="Center"
                                                           Margin="0,0,8,0"/>
                                 <TextBlock Text="{Binding ProcessingMilliseconds, StringFormat='#,##0 ms'}"
