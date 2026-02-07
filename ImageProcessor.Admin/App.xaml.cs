@@ -26,11 +26,19 @@ namespace ImageProcessor.Admin
 
         private void LoadThemeSettings()
         {
-            // App.config からテーマ設定を読み込む
-            var isDark = ImageProcessor.Admin.Properties.Settings.Default.IsDarkTheme;
-            if (isDark)
+            try
             {
-                ApplyDarkTheme();
+                // App.config からテーマ設定を読み込む
+                var isDark = ImageProcessor.Admin.Properties.Settings.Default.IsDarkTheme;
+                if (isDark)
+                {
+                    ApplyDarkTheme();
+                }
+            }
+            catch (Exception ex)
+            {
+                // 設定の読み込みに失敗した場合はデフォルト（ライトテーマ）を使用
+                System.Diagnostics.Trace.TraceWarning($"Failed to load theme settings: {ex.Message}");
             }
         }
 
@@ -47,9 +55,17 @@ namespace ImageProcessor.Admin
                 ApplyLightTheme();
             }
 
-            // 設定を保存
-            ImageProcessor.Admin.Properties.Settings.Default.IsDarkTheme = _isDarkTheme;
-            ImageProcessor.Admin.Properties.Settings.Default.Save();
+            // 設定を保存（エラーが発生しても続行）
+            try
+            {
+                ImageProcessor.Admin.Properties.Settings.Default.IsDarkTheme = _isDarkTheme;
+                ImageProcessor.Admin.Properties.Settings.Default.Save();
+            }
+            catch (Exception ex)
+            {
+                // 設定の保存に失敗した場合はログに記録するだけで続行
+                System.Diagnostics.Trace.TraceWarning($"Failed to save theme settings: {ex.Message}");
+            }
         }
 
         private void ApplyDarkTheme()
