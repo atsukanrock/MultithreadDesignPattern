@@ -23,45 +23,11 @@
 
 #### 原因
 - XAML リソースの読み込みエラー
-- MahApps.Metro のリソースパスが古い
 - 起動時の例外が表示されていない
 
 #### 解決方法
 
-**手順1: グローバル例外ハンドラの確認**
-
-`App.xaml.cs` に以下が含まれているか確認:
-
-```csharp
-protected override void OnStartup(StartupEventArgs e)
-{
-    DispatcherUnhandledException += OnDispatcherUnhandledException;
-    AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-    base.OnStartup(e);
-}
-
-private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
-{
-    MessageBox.Show($"エラー: {e.Exception.Message}", "エラー",
-        MessageBoxButton.OK, MessageBoxImage.Error);
-    e.Handled = true;
-}
-```
-
-**手順2: MahApps.Metro リソースパスの確認**
-
-`App.xaml` を確認し、MahApps.Metro 2.x 用のパスになっているか確認:
-
-```xml
-<ResourceDictionary.MergedDictionaries>
-  <!-- MahApps.Metro 2.x -->
-  <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
-  <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
-  <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
-</ResourceDictionary.MergedDictionaries>
-```
-
-**手順3: Visual Studio でデバッグ**
+**手順1: Visual Studio でデバッグ**
 
 ```powershell
 # Visual Studio で開く
@@ -120,25 +86,6 @@ var connection = new HubConnectionBuilder()
 ```
 
 ImageProcessor.Web 側で `/hubs/keyword` が正しくマッピングされているか確認。
-
-### 問題: MahApps.Metro のスタイルが適用されない
-
-#### 症状
-- ウィンドウは表示されるが、デザインがおかしい
-- ボタンやコントロールのスタイルが標準的なWPFのまま
-
-#### 解決方法
-
-**App.xaml のリソース順序を確認:**
-
-```xml
-<ResourceDictionary.MergedDictionaries>
-  <!-- この順序が重要 -->
-  <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
-  <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
-  <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
-</ResourceDictionary.MergedDictionaries>
-```
 
 ---
 

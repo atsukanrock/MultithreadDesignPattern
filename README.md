@@ -35,13 +35,13 @@ MultithreadDesignPattern/
 | ImageProcessor.Core | .NET 10 | 共通ロジック, IConfiguration |
 | SimpleWorker | .NET 10 | Worker Service, Azure Storage |
 | MultithreadWorker | .NET 10 | Worker Service, System.Threading.Channels |
-| SearchWorker | .NET 10 | Worker Service, Bing Search API |
+| SearchWorker | .NET 10 | Worker Service, Unsplash API |
 | ImageProcessor.Admin | .NET 10 (Windows) | WPF, MVVM, SignalR Client, Reactive Extensions |
 | ImageProcessor.Web | .NET 10 | ASP.NET Core MVC, SignalR, Web API |
 
 ### 使用ライブラリ (.NET 10)
 
-- **UI**: MahApps.Metro 2.4, CommunityToolkit.Mvvm 8.2
+- **UI**: CommunityToolkit.Mvvm 8.2 (標準 WPF)
 - **Web**: ASP.NET Core MVC, SignalR 10.0
 - **画像処理**: SixLabors.ImageSharp 3.1
 - **Azure**: Azure.Storage.Blobs 12.x, Azure.Storage.Queues 12.x
@@ -231,4 +231,4 @@ Observable.FromEventPattern<ImageProcessedEventArgs>(
 
 全プロジェクトの .NET 10 (LTS) への移行が完了しました。
 
-最終更新: 2026-02-09
+最終更新: 2026-02-10

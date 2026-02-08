@@ -125,7 +125,7 @@ dotnet run --project ImageProcessor.Admin
 #### 起動後の確認
 
 - ウィンドウが表示される
-- 左上に赤い接続状態インジケーター
+- ヘッダー右側に赤い接続状態インジケーター（接続後は緑に変わる）
 - デバッグモードの場合、サンプルキーワードが表示される
 
 ### ImageProcessor.SimpleWorker (Worker Service)

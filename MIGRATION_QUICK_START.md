@@ -35,7 +35,7 @@
 4. ImageProcessor.MultithreadWorker → .NET 10 Worker Service
 5. ImageProcessor.SearchWorker → .NET 10 Worker Service
 6. ImageProcessor.Admin        → .NET 10 WPF
-7. ImageProcessor.Web          → ASP.NET Core 8.0
+7. ImageProcessor.Web          → ASP.NET Core 10.0
 ```
 
 ## ステップ 1: ImageSearch の移行（20分）

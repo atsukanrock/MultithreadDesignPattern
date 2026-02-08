@@ -64,13 +64,12 @@
 - **プロジェクトタイプ**: WPF Application
 - **主な変更**:
   - MVVM Light → CommunityToolkit.Mvvm 8.2.2 に移行
-  - MahApps.Metro 0.13 → 2.4.10 に更新
+  - MahApps.Metro を除去し標準 WPF に移行（.NET 10 との互換性問題を解消）
   - Microsoft.AspNet.SignalR.Client → Microsoft.AspNetCore.SignalR.Client 10.0
   - WindowsAzure.Storage → Azure.Storage.Blobs/Queues 12.x
   - Reactive Extensions 2.x → System.Reactive 6.1
   - ImageProcessor → SixLabors.ImageSharp 3.1.12
   - グローバル例外ハンドラを追加（起動時エラーの可視化）
-  - MahApps.Metro 2.x のリソースパスに更新
 - **動作確認**: ✅ Windows で起動確認済み
 
 ### ✅ 7. ImageProcessor.Web
@@ -94,7 +93,7 @@
 | 画像処理 | System.Drawing / ImageProcessor | SixLabors.ImageSharp 3.1.12 |
 | 画像検索 | Bing Search API | Unsplash API |
 | MVVM (WPF) | MVVM Light 4.x | CommunityToolkit.Mvvm 8.x |
-| UI Framework (WPF) | MahApps.Metro 0.13 | MahApps.Metro 2.4 |
+| UI Framework (WPF) | MahApps.Metro 0.13 | 標準 WPF |
 | SignalR | Microsoft.AspNet.SignalR 2.1 | Microsoft.AspNetCore.SignalR 10.0 |
 | Reactive Extensions | Rx 2.2 | System.Reactive 6.1 |
 | Worker Service | Azure Cloud Service | .NET Worker Service |
@@ -102,10 +101,9 @@
 ## 既知の問題
 
 ### ImageProcessor.Admin
-- ✅ **解決済み**: 初回起動時にウィンドウが表示されない問題
-  - **原因**: MahApps.Metro のリソースパスが古い
-  - **対処**: App.xaml のリソースパスを 2.x 用に更新
-  - **追加対応**: グローバル例外ハンドラを追加してエラーを可視化
+- ✅ **解決済み**: MahApps.Metro の .NET 10 非互換によりウィンドウがドラッグできない問題
+  - **原因**: MahApps.Metro の GlowBrush が .NET 10 上でウィンドウ移動を妨げる
+  - **対処**: MahApps.Metro を除去し標準 WPF に移行
 
 ## 次のステップ
 
