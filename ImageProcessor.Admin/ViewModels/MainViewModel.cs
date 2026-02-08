@@ -217,9 +217,10 @@ namespace ImageProcessor.Admin.ViewModels
                                   .Subscribe(args =>
                                   {
                                       // ReSharper disable AccessToDisposedClosure
-                                      foreach (var result in args.EventArgs.ImageSearchResult.d.results)
+                                      foreach (var photo in args.EventArgs.ImageSearchResult.results ?? [])
                                       {
-                                          retrieverChannel.Add(new Uri(result.MediaUrl));
+                                          if (photo.urls?.regular != null)
+                                              retrieverChannel.Add(new Uri(photo.urls.regular));
                                       }
                                       if (keywordCount <= Interlocked.Increment(ref processedKeywordCount))
                                       {

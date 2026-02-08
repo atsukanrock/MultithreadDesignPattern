@@ -1,14 +1,14 @@
 using System;
-using ImageSearchTest.Bing.ResultObjects;
+using ImageSearchTest.Unsplash.ResultObjects;
 
 namespace ImageProcessor.Admin.Models
 {
     internal class ImageSearchedEventArgs : EventArgs
     {
         private readonly string _keyword;
-        private readonly ImageSearchObject _imageSearchResult;
+        private readonly UnsplashSearchResult _imageSearchResult;
 
-        public ImageSearchedEventArgs(string keyword, ImageSearchObject imageSearchResult)
+        public ImageSearchedEventArgs(string keyword, UnsplashSearchResult imageSearchResult)
         {
             _keyword = keyword;
             _imageSearchResult = imageSearchResult;
@@ -19,7 +19,7 @@ namespace ImageProcessor.Admin.Models
             get { return _keyword; }
         }
 
-        public ImageSearchObject ImageSearchResult
+        public UnsplashSearchResult ImageSearchResult
         {
             get { return _imageSearchResult; }
         }

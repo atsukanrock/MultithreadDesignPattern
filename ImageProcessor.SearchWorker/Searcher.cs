@@ -1,11 +1,10 @@
 using System.Diagnostics;
-using System.Net;
 using Azure.Storage.Blobs;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
 using ImageProcessor.ServiceRuntime;
 using ImageProcessor.Storage.Queue.Messages;
-using ImageSearchTest.Bing.ResultObjects;
+using ImageSearchTest.Unsplash.ResultObjects;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 
@@ -40,20 +39,17 @@ internal class Searcher : WorkerEntryPoint
 
     public override async Task Run()
     {
-        // This is a sample worker implementation. Replace with your logic.
         Trace.TraceInformation("ImageProcessor.SearchWorker entry point called");
 
         try
         {
             while (true)
             {
-                // Retrieve a new message from the queue.
                 var response = await _keywordsQueue.ReceiveMessageAsync(cancellationToken: _cancellationToken);
                 _cancellationToken.ThrowIfCancellationRequested();
 
                 if (response.Value == null)
                 {
-                    // There is no message in the queue.
                     await Task.Delay(1000, _cancellationToken);
                     _cancellationToken.ThrowIfCancellationRequested();
                     continue;
@@ -102,36 +98,27 @@ internal class Searcher : WorkerEntryPoint
         await _keywordsQueue.DeleteMessageAsync(message.MessageId, message.PopReceipt, _cancellationToken);
     }
 
-    private async Task<ImageSearchObject?> SearchAsync(string searchWord, int top = 5)
+    private async Task<UnsplashSearchResult?> SearchAsync(string searchWord, int perPage = 5)
     {
-        var escapedSearchWord = Uri.EscapeDataString(searchWord);
-        const string market = "ja-JP";
-        const string adult = "Off"; // Adult filter: Off / Moderate / Strict
-        const string format = "json"; // xml (ATOM) / json
-
-        var accountKey = _configuration["Bing:ApiKey"];
-        if (string.IsNullOrEmpty(accountKey))
+        var accessKey = _configuration["Unsplash:AccessKey"];
+        if (string.IsNullOrEmpty(accessKey))
         {
-            Trace.TraceError("Bing API key not found in configuration");
+            Trace.TraceError("Unsplash access key not found in configuration");
             return null;
         }
 
-        var httpClientHandler = new HttpClientHandler { Credentials = new NetworkCredential(accountKey, accountKey) };
-        var httpClient = new HttpClient(httpClientHandler);
-        var searchUri = "https://api.datamarket.azure.com/Bing/Search/Image" +
-                        "?Query='" + escapedSearchWord + "'" +
-                        "&Market='" + market + "'" +
-                        "&Adult='" + adult + "'" +
-                        "&$top=" + top +
-                        "&$format=" + format;
+        var escapedQuery = Uri.EscapeDataString(searchWord);
+        var searchUri = $"https://api.unsplash.com/search/photos?query={escapedQuery}&per_page={perPage}&client_id={accessKey}";
 
         HttpResponseMessage response;
         try
         {
             Trace.TraceInformation("Searching: {0}", searchUri);
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("Accept-Version", "v1");
             response = await httpClient.GetAsync(searchUri);
             Trace.TraceInformation("Response status code for search: {0}", response.StatusCode);
-            if (response.StatusCode != HttpStatusCode.OK)
+            if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
@@ -142,29 +129,29 @@ internal class Searcher : WorkerEntryPoint
             return null;
         }
 
-        var unescapedResponse = Uri.UnescapeDataString(await response.Content.ReadAsStringAsync());
-        var contents = JsonConvert.DeserializeObject<ImageSearchObject>(unescapedResponse);
-        return contents;
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<UnsplashSearchResult>(json);
     }
 
-    private async Task<IEnumerable<string>> AddOriginalImagesToBlob(ImageSearchObject contents)
+    private async Task<IEnumerable<string>> AddOriginalImagesToBlob(UnsplashSearchResult contents)
     {
         var fileNames = new List<string>();
 
-        if (contents.d?.results == null)
+        if (contents.results == null)
         {
             Trace.TraceWarning("Search results are null");
             return fileNames;
         }
 
-        foreach (var result in contents.d.results)
+        foreach (var photo in contents.results)
         {
-            if (string.IsNullOrEmpty(result.MediaUrl))
+            var imageUrl = photo.urls?.regular;
+            if (string.IsNullOrEmpty(imageUrl))
             {
                 continue;
             }
 
-            var imageUri = new Uri(result.MediaUrl);
+            var imageUri = new Uri(imageUrl);
             HttpResponseMessage response;
             try
             {
@@ -172,7 +159,7 @@ internal class Searcher : WorkerEntryPoint
                 Trace.TraceInformation("Retrieving an image: {0}", imageUri);
                 response = await httpClient.GetAsync(imageUri, _cancellationToken);
                 Trace.TraceInformation("Response status code for retrieving an image: {0}", response.StatusCode);
-                if (response.StatusCode != HttpStatusCode.OK)
+                if (!response.IsSuccessStatusCode)
                 {
                     continue;
                 }
@@ -183,8 +170,7 @@ internal class Searcher : WorkerEntryPoint
                 continue;
             }
 
-            var originalExtension = Path.GetExtension(imageUri.AbsolutePath);
-            var fileName = Guid.NewGuid().ToString("N") + originalExtension;
+            var fileName = Guid.NewGuid().ToString("N") + ".jpg";
 
             try
             {
@@ -192,15 +178,10 @@ internal class Searcher : WorkerEntryPoint
                 var imageStream = await response.Content.ReadAsStreamAsync(_cancellationToken);
 
                 await blobClient.UploadAsync(imageStream, overwrite: true, cancellationToken: _cancellationToken);
-
-                // Set content type
-                if (!string.IsNullOrEmpty(result.ContentType))
+                await blobClient.SetHttpHeadersAsync(new Azure.Storage.Blobs.Models.BlobHttpHeaders
                 {
-                    await blobClient.SetHttpHeadersAsync(new Azure.Storage.Blobs.Models.BlobHttpHeaders
-                    {
-                        ContentType = result.ContentType
-                    }, cancellationToken: _cancellationToken);
-                }
+                    ContentType = "image/jpeg"
+                }, cancellationToken: _cancellationToken);
 
                 Trace.TraceInformation("An image has been saved: {0}", blobClient.Uri.AbsoluteUri);
             }

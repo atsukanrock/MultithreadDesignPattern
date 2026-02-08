@@ -45,9 +45,9 @@ namespace ImageProcessor.Admin.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string AzureMarketplaceAccountKey {
+        public string UnsplashAccessKey {
             get {
-                return ((string)(this["AzureMarketplaceAccountKey"]));
+                return ((string)(this["UnsplashAccessKey"]));
             }
         }
 

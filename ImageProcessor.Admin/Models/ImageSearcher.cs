@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ImageProcessor.Admin.Properties;
-using ImageSearchTest.Bing.ResultObjects;
+using ImageSearchTest.Unsplash.ResultObjects;
 using Newtonsoft.Json;
 
 namespace ImageProcessor.Admin.Models
@@ -28,33 +27,22 @@ namespace ImageProcessor.Admin.Models
 
         protected override async Task ProcessRequestAsync(string keyword)
         {
-            var escapedKeyword = Uri.EscapeDataString(keyword);
-            const string market = "ja-JP";
-            const string adult = "Strict"; // Adult filter: Off / Moderate / Strict
-            //const int top = 5; // How many numbers of images do I want? default: 50
-            const string format = "json"; // xml (ATOM) / json
+            var accessKey = Settings.Default.UnsplashAccessKey;
+            var escapedQuery = Uri.EscapeDataString(keyword);
+            var searchUri = $"https://api.unsplash.com/search/photos?query={escapedQuery}&per_page={_imagesPerKeyword}&client_id={accessKey}";
 
-            var accountKey = Settings.Default.AzureMarketplaceAccountKey;
-            var httpClientHandler = new HttpClientHandler {Credentials = new NetworkCredential(accountKey, accountKey)};
-            var httpClient = new HttpClient(httpClientHandler);
-            var searchUri = "https://api.datamarket.azure.com/Bing/Search/Image" +
-                            "?Query='" + escapedKeyword + "'" +
-                            "&Market='" + market + "'" +
-                            "&Adult='" + adult + "'" +
-                            "&$top=" + _imagesPerKeyword +
-                            "&$format=" + format;
-
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("Accept-Version", "v1");
             var response = await httpClient.GetAsync(searchUri);
-            if (response.StatusCode != HttpStatusCode.OK)
+            if (!response.IsSuccessStatusCode)
             {
-                // TODO: Use appropriate exception type.
-                throw new Exception(string.Format("HTTP status code is {0}", response.StatusCode));
+                throw new Exception($"HTTP status code is {response.StatusCode}");
             }
 
-            var unescapedResponse = Uri.UnescapeDataString(await response.Content.ReadAsStringAsync());
-            var imageSearchObject = JsonConvert.DeserializeObject<ImageSearchObject>(unescapedResponse);
+            var json = await response.Content.ReadAsStringAsync();
+            var searchResult = JsonConvert.DeserializeObject<UnsplashSearchResult>(json);
 
-            OnImageSearched(new ImageSearchedEventArgs(keyword, imageSearchObject));
+            OnImageSearched(new ImageSearchedEventArgs(keyword, searchResult));
         }
     }
 }
