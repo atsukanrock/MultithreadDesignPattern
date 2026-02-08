@@ -5,25 +5,25 @@
 ## 前提条件
 
 ### 必須
-- **.NET 8 SDK** - [ダウンロード](https://dotnet.microsoft.com/download/dotnet/8.0)
+- **.NET 10 SDK** - [ダウンロード](https://dotnet.microsoft.com/download/dotnet/10.0)
 - **Windows** (ImageProcessor.Admin の実行に必要)
 
 ### オプション
 - **Visual Studio 2022** - WPF アプリのデバッグに推奨
 - **Visual Studio Code** - Worker Services のデバッグに推奨
-- **Azure Storage Emulator** または **Azurite** - ローカル開発用
+- **Azurite** - ローカル Azure Storage エミュレーター
 
 ## プロジェクト構成
 
 ```
 MultithreadDesignPattern/
-├── ImageSearch/                    # データモデル (net8.0)
-├── ImageProcessor.Core/            # 共通ロジック (net8.0)
-├── ImageProcessor.SimpleWorker/    # シングルスレッド Worker (net8.0)
-├── ImageProcessor.MultithreadWorker/ # マルチスレッド Worker (net8.0)
-├── ImageProcessor.SearchWorker/    # 画像検索 Worker (net8.0)
-├── ImageProcessor.Admin/           # WPF 管理ツール (net8.0-windows)
-└── ImageProcessor.Web/             # Web UI (.NET Framework 4.5) ⚠️ 未移行
+├── ImageSearch/                    # データモデル (net10.0)
+├── ImageProcessor.Core/            # 共通ロジック (net10.0)
+├── ImageProcessor.SimpleWorker/    # シングルスレッド Worker (net10.0)
+├── ImageProcessor.MultithreadWorker/ # マルチスレッド Worker (net10.0)
+├── ImageProcessor.SearchWorker/    # 画像検索 Worker (net10.0)
+├── ImageProcessor.Admin/           # WPF 管理ツール (net10.0-windows)
+└── ImageProcessor.Web/             # ASP.NET Core Web UI (net10.0)
 ```
 
 ## クイックスタート
@@ -35,22 +35,70 @@ git clone <your-repo-url>
 cd MultithreadDesignPattern
 ```
 
-### 2. 依存関係の復元
+### 2. 依存関係の復元とビルド
 
 ```bash
 dotnet restore
+dotnet build
 ```
 
-### 3. ビルド
+## API キーの設定
+
+### Unsplash Access Key の取得
+
+ImageProcessor.SearchWorker と ImageProcessor.Admin の画像検索機能には Unsplash API キーが必要です。
+
+1. [https://unsplash.com/developers](https://unsplash.com/developers) でアカウント登録
+2. 「New Application」でアプリを作成
+3. **Access Key** をコピー（無料、50リクエスト/時間）
+
+### SearchWorker への設定
+
+`appsettings.json` にはプレースホルダーが入っています。実際のキーは **git 管理外** のファイルに書きます。
 
 ```bash
-# 全プロジェクトをビルド
-dotnet build
-
-# または個別にビルド
-dotnet build ImageProcessor.Core
-dotnet build ImageProcessor.Admin
+# ImageProcessor.SearchWorker/ に以下のファイルを作成（gitignore 済み）
 ```
+
+`ImageProcessor.SearchWorker/appsettings.Development.json`:
+
+```json
+{
+  "Unsplash": {
+    "AccessKey": "あなたのキーをここに"
+  }
+}
+```
+
+起動時に環境変数で渡す方法もあります:
+
+```bash
+UNSPLASH_ACCESS_KEY="あなたのキー" dotnet run --project ImageProcessor.SearchWorker
+```
+
+### Admin (WPF) への設定
+
+`app.config` の `UnsplashAccessKey` 設定に直接入力するか、Visual Studio の Settings デザイナーで設定します。
+
+### ImageSearchTest（動作確認用）への設定
+
+```bash
+# 環境変数にセットして実行
+export UNSPLASH_ACCESS_KEY="あなたのキー"   # Linux/macOS
+$env:UNSPLASH_ACCESS_KEY="あなたのキー"     # PowerShell
+dotnet run --project ImageSearchTest
+```
+
+正常に動作すると画像の ID と URL が出力されます:
+
+```
+Requesting: https://api.unsplash.com/search/photos?query=Ninja&per_page=5&...
+Status: OK
+Total results: 515
+id: fB824nd3WWU, url: https://images.unsplash.com/...
+```
+
+> **注意**: Unsplash は英語キーワード向けのストック写真サービスです。日本語キーワードでは結果が少ない場合があります。
 
 ## 各プロジェクトの起動方法
 
@@ -61,7 +109,6 @@ dotnet build ImageProcessor.Admin
 #### 方法1: Visual Studio で実行
 
 ```powershell
-# ソリューションを開く
 start MultithreadDesignPattern.sln
 ```
 
@@ -81,127 +128,37 @@ dotnet run --project ImageProcessor.Admin
 - 左上に赤い接続状態インジケーター
 - デバッグモードの場合、サンプルキーワードが表示される
 
-#### トラブルシューティング
-
-**ウィンドウが表示されない場合**:
-1. グローバル例外ハンドラがエラーダイアログを表示するはず
-2. イベントビューアでエラーログを確認: `eventvwr.msc`
-3. Visual Studio でデバッグ実行して例外発生箇所を特定
-
-**設定の変更**:
-`ImageProcessor.Admin/App.config` を編集:
-
-```xml
-<setting name="WebSiteUrl" serializeAs="String">
-  <value>http://localhost:53344/</value>
-</setting>
-```
-
 ### ImageProcessor.SimpleWorker (Worker Service)
-
-#### 起動
 
 ```bash
 dotnet run --project ImageProcessor.SimpleWorker
 ```
 
-#### 設定
-
-`ImageProcessor.SimpleWorker/appsettings.json`:
-
-```json
-{
-  "ConnectionStrings": {
-    "StorageAccount": "UseDevelopmentStorage=true"
-  },
-  "Worker": {
-    "QueueName": "processing-queue",
-    "PollingInterval": 1000
-  }
-}
-```
-
-#### 動作確認
-
-ログに以下が表示されれば正常:
-```
-info: ImageProcessor.SimpleWorker.Worker[0]
-      Worker started at: 2026-02-03 XX:XX:XX +09:00
-```
-
 ### ImageProcessor.MultithreadWorker (Worker Service)
-
-#### 起動
 
 ```bash
 dotnet run --project ImageProcessor.MultithreadWorker
 ```
 
-#### 設定
-
-`ImageProcessor.MultithreadWorker/appsettings.json`:
-
-```json
-{
-  "ConnectionStrings": {
-    "StorageAccount": "UseDevelopmentStorage=true"
-  },
-  "Worker": {
-    "QueueName": "processing-queue",
-    "ChannelCapacity": 100,
-    "ConsumerThreadCount": 4
-  }
-}
-```
-
 ### ImageProcessor.SearchWorker (Worker Service)
 
-#### 起動
-
 ```bash
+# Unsplash キーを設定してから起動
 dotnet run --project ImageProcessor.SearchWorker
 ```
 
-#### 設定
+### ImageProcessor.Web (ASP.NET Core)
 
-画像検索機能を使用する場合は Bing Search API キーが必要です。
-
-`ImageProcessor.SearchWorker/appsettings.json`:
-
-```json
-{
-  "ConnectionStrings": {
-    "StorageAccount": "UseDevelopmentStorage=true"
-  },
-  "BingSearch": {
-    "ApiKey": "your-api-key-here",
-    "Endpoint": "https://api.bing.microsoft.com/v7.0/images/search"
-  }
-}
+```bash
+dotnet run --project ImageProcessor.Web
+# ブラウザで http://localhost:5000 にアクセス
 ```
-
-### ImageProcessor.Web (未移行)
-
-⚠️ このプロジェクトはまだ .NET Framework 4.5 です。
-
-#### Windows での起動
-
-```powershell
-# IIS Express で起動
-start ImageProcessor.Web/ImageProcessor.Web.csproj
-```
-
-または Visual Studio で:
-1. ImageProcessor.Web をスタートアッププロジェクトに設定
-2. F5 キーで実行
 
 ## ローカル開発環境のセットアップ
 
-### Azure Storage Emulator のセットアップ
+### Azurite のセットアップ
 
 Worker Services は Azure Storage を使用します。ローカル開発には Azurite を推奨します。
-
-#### Azurite のインストール (推奨)
 
 ```bash
 # npm でインストール
@@ -218,107 +175,15 @@ docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 \
   mcr.microsoft.com/azure-storage/azurite
 ```
 
-#### 接続文字列
+接続文字列（各 `appsettings.json` にデフォルト設定済み）:
 
 ```
 UseDevelopmentStorage=true
 ```
 
-または明示的に:
-
-```
-DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;
-```
-
-### 必要なキューとコンテナーの作成
-
-```bash
-# Azure Storage Explorer を使用するか、以下のコードで作成
-
-# .NET Interactive または C# スクリプトで
-#r "nuget: Azure.Storage.Queues, 12.17.0"
-#r "nuget: Azure.Storage.Blobs, 12.19.0"
-
-using Azure.Storage.Queues;
-using Azure.Storage.Blobs;
-
-var connectionString = "UseDevelopmentStorage=true";
-
-// Queue の作成
-var queueClient = new QueueClient(connectionString, "processing-queue");
-await queueClient.CreateIfNotExistsAsync();
-
-// Blob Container の作成
-var blobServiceClient = new BlobServiceClient(connectionString);
-var containerClient = blobServiceClient.GetBlobContainerClient("original-images");
-await containerClient.CreateIfNotExistsAsync();
-```
-
-## 統合動作確認
-
-### シナリオ1: Admin → Web → Worker (完全なワークフロー)
-
-⚠️ ImageProcessor.Web が .NET 8 に移行されるまで、完全なワークフローは動作しません。
-
-### シナリオ2: Worker Services の単独テスト
-
-1. Azurite を起動
-2. Queue にテストメッセージを追加
-3. Worker を起動して処理を確認
-
-```csharp
-// テストメッセージの送信例
-var queueClient = new QueueClient("UseDevelopmentStorage=true", "processing-queue");
-await queueClient.SendMessageAsync("test-message");
-```
-
-### シナリオ3: Admin の単独テスト
-
-1. ImageProcessor.Admin を起動
-2. デバッグモードでサンプルキーワードが表示されることを確認
-3. UI の動作を確認
-
-## 開発時のヒント
-
-### Visual Studio Code での開発
-
-#### 推奨拡張機能
-- C# Dev Kit
-- .NET Extension Pack
-- Azure Account
-
-#### tasks.json と launch.json
-
-`.vscode/tasks.json`:
-
-```json
-{
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "build",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "build",
-        "${workspaceFolder}/ImageProcessor.SimpleWorker/ImageProcessor.SimpleWorker.csproj"
-      ]
-    }
-  ]
-}
-```
-
-### ホットリロード
-
-Worker Services でホットリロードを有効にする:
-
-```bash
-dotnet watch run --project ImageProcessor.SimpleWorker
-```
-
 ### ログレベルの変更
 
-`appsettings.Development.json`:
+`appsettings.Development.json`（gitignore 済み）を各プロジェクトに作成:
 
 ```json
 {
@@ -333,60 +198,37 @@ dotnet watch run --project ImageProcessor.SimpleWorker
 
 ## トラブルシューティング
 
-### よくある問題
+### "Unsplash access key not found in configuration"
 
-#### 1. "プロジェクトが見つからない"
+環境変数または `appsettings.Development.json` にキーが設定されていません。
+上記「API キーの設定」を参照してください。
 
-```bash
-# ソリューションの復元
-dotnet restore
-```
-
-#### 2. "Azure Storage に接続できない"
+### "Azure Storage に接続できない"
 
 ```bash
 # Azurite が起動しているか確認
-netstat -an | findstr "10000 10001 10002"
+netstat -an | grep "10000\|10001\|10002"  # Linux
+netstat -an | findstr "10000 10001 10002"  # Windows
 
 # Azurite を再起動
 azurite --silent
 ```
 
-#### 3. "ポートが既に使用されている"
+### "ポートが既に使用されている"
 
 ```bash
-# Windows でポート使用状況を確認
-netstat -ano | findstr ":53344"
-
-# プロセスを終了
-taskkill /PID <PID> /F
+netstat -ano | findstr ":5000"   # Windows
+kill $(lsof -t -i:5000)          # Linux/macOS
 ```
 
-#### 4. ImageProcessor.Admin が起動しない
+### ImageProcessor.Admin が起動しない
 
-- Visual Studio でデバッグ実行
+- Visual Studio でデバッグ実行して例外発生箇所を特定
 - イベントビューア (`eventvwr.msc`) でエラーログを確認
-- グローバル例外ハンドラがエラーを表示するはず
-
-### ログの確認
-
-```bash
-# Worker Services のログ
-dotnet run --project ImageProcessor.SimpleWorker
-
-# 詳細ログ
-$env:ASPNETCORE_ENVIRONMENT="Development"
-dotnet run --project ImageProcessor.SimpleWorker
-```
-
-## 次のステップ
-
-1. **ImageProcessor.Web の移行**: ASP.NET Core への移行を完了
-2. **統合テスト**: 全コンポーネントを連携させて動作確認
-3. **デプロイ**: Azure へのデプロイ戦略を検討
 
 ## 参考資料
 
-- [.NET 8 ドキュメント](https://learn.microsoft.com/ja-jp/dotnet/core/whats-new/dotnet-8)
+- [.NET 10 ドキュメント](https://learn.microsoft.com/ja-jp/dotnet/core/whats-new/dotnet-10)
+- [Unsplash API ドキュメント](https://unsplash.com/documentation)
 - [Azurite ドキュメント](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)
 - [Worker Service ドキュメント](https://learn.microsoft.com/ja-jp/dotnet/core/extensions/workers)

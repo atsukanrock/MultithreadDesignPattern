@@ -55,6 +55,7 @@ MultithreadDesignPattern/
 - .NET 10 SDK ([ダウンロード](https://dotnet.microsoft.com/download/dotnet/10.0))
 - Windows (ImageProcessor.Admin の実行に必要)
 - Azurite または Azure Storage Emulator (オプション)
+- Unsplash Access Key ([取得方法](https://unsplash.com/developers)) — 画像検索機能を使う場合
 
 ### ビルド
 
