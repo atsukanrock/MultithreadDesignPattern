@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net9.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <LangVersion>latest</LangVersion>
@@ -19,18 +19,18 @@
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
 
     <!-- SignalR Client -->
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
 
     <!-- Azure Storage -->
     <PackageReference Include="Azure.Storage.Blobs" Version="12.22.1" />
     <PackageReference Include="Azure.Storage.Queues" Version="12.20.1" />
 
     <!-- Reactive Extensions -->
-    <PackageReference Include="System.Reactive" Version="6.0.0" />
-    <PackageReference Include="System.Reactive.Windows.Threading" Version="6.0.0" />
+    <PackageReference Include="System.Reactive" Version="6.1.0" />
+    <PackageReference Include="System.Reactive.Windows.Threading" Version="6.1.0" />
 
     <!-- Image Processing -->
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
 
     <!-- JSON -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
