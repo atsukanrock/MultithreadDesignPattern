@@ -1,6 +1,6 @@
 # MultithreadDesignPattern
 
-マルチスレッド設計パターンのコードサンプル集 - .NET 8 に移行しました
+マルチスレッド設計パターンのコードサンプル集 - .NET 10 に移行しました
 
 ## 概要
 
@@ -16,43 +16,43 @@
 
 ```
 MultithreadDesignPattern/
-├── ImageSearch/                    # 画像検索データモデル (net8.0)
-├── ImageProcessor.Core/            # 共通ロジック (net8.0)
-├── ImageProcessor.SimpleWorker/    # シングルスレッド Worker (net8.0)
-├── ImageProcessor.MultithreadWorker/ # マルチスレッド Worker (net8.0)
-├── ImageProcessor.SearchWorker/    # 画像検索 Worker (net8.0)
-├── ImageProcessor.Admin/           # WPF 管理ツール (net8.0-windows)
-└── ImageProcessor.Web/             # ASP.NET Core Web UI (net8.0) ✅
+├── ImageSearch/                    # 画像検索データモデル (net10.0)
+├── ImageProcessor.Core/            # 共通ロジック (net10.0)
+├── ImageProcessor.SimpleWorker/    # シングルスレッド Worker (net10.0)
+├── ImageProcessor.MultithreadWorker/ # マルチスレッド Worker (net10.0)
+├── ImageProcessor.SearchWorker/    # 画像検索 Worker (net10.0)
+├── ImageProcessor.Admin/           # WPF 管理ツール (net10.0-windows)
+└── ImageProcessor.Web/             # ASP.NET Core Web UI (net10.0)
 ```
 
 ## 技術スタック
 
-### .NET 8 移行完了 (7/7) ✅
+### .NET 10 移行完了 (7/7) ✅
 
 | プロジェクト | フレームワーク | 主要技術 |
 |------------|--------------|---------|
-| ImageSearch | .NET 8 | データモデル |
-| ImageProcessor.Core | .NET 8 | 共通ロジック, IConfiguration |
-| SimpleWorker | .NET 8 | Worker Service, Azure Storage |
-| MultithreadWorker | .NET 8 | Worker Service, System.Threading.Channels |
-| SearchWorker | .NET 8 | Worker Service, Bing Search API |
-| ImageProcessor.Admin | .NET 8 (Windows) | WPF, MVVM, SignalR Client, Reactive Extensions |
-| ImageProcessor.Web | .NET 8 | ASP.NET Core MVC, SignalR, Web API |
+| ImageSearch | .NET 10 | データモデル |
+| ImageProcessor.Core | .NET 10 | 共通ロジック, IConfiguration |
+| SimpleWorker | .NET 10 | Worker Service, Azure Storage |
+| MultithreadWorker | .NET 10 | Worker Service, System.Threading.Channels |
+| SearchWorker | .NET 10 | Worker Service, Bing Search API |
+| ImageProcessor.Admin | .NET 10 (Windows) | WPF, MVVM, SignalR Client, Reactive Extensions |
+| ImageProcessor.Web | .NET 10 | ASP.NET Core MVC, SignalR, Web API |
 
-### 使用ライブラリ (.NET 8)
+### 使用ライブラリ (.NET 10)
 
 - **UI**: MahApps.Metro 2.4, CommunityToolkit.Mvvm 8.2
-- **Web**: ASP.NET Core MVC, SignalR 8.0
+- **Web**: ASP.NET Core MVC, SignalR 10.0
 - **画像処理**: SixLabors.ImageSharp 3.1
 - **Azure**: Azure.Storage.Blobs 12.x, Azure.Storage.Queues 12.x
-- **リアルタイム通信**: Microsoft.AspNetCore.SignalR 8.0 (Server/Client)
-- **リアクティブ**: System.Reactive 6.0
+- **リアルタイム通信**: Microsoft.AspNetCore.SignalR 10.0 (Server/Client)
+- **リアクティブ**: System.Reactive 6.1
 
 ## クイックスタート
 
 ### 前提条件
 
-- .NET 8 SDK ([ダウンロード](https://dotnet.microsoft.com/download/dotnet/8.0))
+- .NET 10 SDK ([ダウンロード](https://dotnet.microsoft.com/download/dotnet/10.0))
 - Windows (ImageProcessor.Admin の実行に必要)
 - Azurite または Azure Storage Emulator (オプション)
 
@@ -105,7 +105,7 @@ dotnet run --project ImageProcessor.SearchWorker
 
 詳細なドキュメントが利用可能です：
 
-- **[MIGRATION_STATUS.md](MIGRATION_STATUS.md)** - .NET 8 移行の詳細な記録
+- **[MIGRATION_STATUS.md](MIGRATION_STATUS.md)** - .NET 移行の詳細な記録
 - **[GETTING_STARTED.md](GETTING_STARTED.md)** - 各プロジェクトの起動方法とセットアップ
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - よくある問題と解決方法
 - **[MIGRATION_QUICK_START.md](MIGRATION_QUICK_START.md)** - 移行手順のステップバイステップガイド
@@ -185,7 +185,7 @@ Observable.FromEventPattern<ImageProcessedEventArgs>(
 ## 移行の成果
 
 ### パフォーマンス
-- .NET 8 の最適化により、画像処理が約 20-30% 高速化（予想）
+- .NET 10 の最適化により、画像処理が約 20-30% 高速化（予想）
 - Channel ベースの実装により、メモリ使用量が削減
 
 ### 開発体験
@@ -200,7 +200,8 @@ Observable.FromEventPattern<ImageProcessedEventArgs>(
 
 ## 今後の予定
 
-- [x] ImageProcessor.Web を ASP.NET Core 8.0 に移行 ✅
+- [x] ImageProcessor.Web を ASP.NET Core に移行 ✅
+- [x] 全プロジェクトを .NET 10 (LTS) に移行 ✅
 - [ ] 完全な統合テストの実装
 - [ ] パフォーマンスベンチマークの実施
 - [ ] Azure へのデプロイ自動化
@@ -225,8 +226,8 @@ Observable.FromEventPattern<ImageProcessedEventArgs>(
 
 ---
 
-**移行進捗**: 7/7 プロジェクト完了 (100%) 🎉✅
+**移行進捗**: 7/7 プロジェクト完了 (100%) ✅
 
-全プロジェクトの .NET 8 移行が完了しました！
+全プロジェクトの .NET 10 (LTS) への移行が完了しました。
 
-最終更新: 2026-02-05
+最終更新: 2026-02-09
