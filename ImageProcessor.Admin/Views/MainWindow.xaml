@@ -1,20 +1,15 @@
-﻿<controls:MetroWindow x:Class="ImageProcessor.Admin.Views.MainWindow"
-                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                      xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-                      xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
-                      xmlns:viewModels="clr-namespace:ImageProcessor.Admin.ViewModels"
-                      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-                      Title="Image Processor Admin"
-                      Width="1400"
-                      Height="900"
-                      WindowStartupLocation="CenterScreen"
-                      Background="{DynamicResource FluentBackgroundBrush}"
-                      BorderThickness="1"
-                      BorderBrush="{DynamicResource FluentBorderBrush}">
-    <controls:MetroWindow.DataContext>
+﻿<Window x:Class="ImageProcessor.Admin.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:viewModels="clr-namespace:ImageProcessor.Admin.ViewModels"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        Title="Image Processor Admin"
+        Width="1400"
+        Height="900"
+        WindowStartupLocation="CenterScreen">
+    <Window.DataContext>
         <viewModels:MainViewModel />
-    </controls:MetroWindow.DataContext>
+    </Window.DataContext>
 
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closed">
@@ -22,7 +17,7 @@
         </i:EventTrigger>
     </i:Interaction.Triggers>
 
-    <Grid Margin="20">
+    <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="1.2*"/>
@@ -31,116 +26,41 @@
         </Grid.RowDefinitions>
 
         <!-- ヘッダー -->
-        <Border Grid.Row="0" Style="{StaticResource FluentCard}" Padding="20,16">
-            <Grid>
-                <StackPanel Orientation="Horizontal">
-                    <iconPacks:PackIconMaterial Kind="ImageMultiple"
-                                              Width="32" Height="32"
-                                              Foreground="{StaticResource FluentAccentBrush}"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,12,0"/>
-                    <TextBlock Text="Image Processor Admin"
-                             Style="{StaticResource FluentSectionHeader}"
-                             FontSize="24"
-                             VerticalAlignment="Center"
-                             Margin="0"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Command="{Binding ToggleThemeCommand}"
-                          Style="{StaticResource FluentThemeToggleButton}"
-                          ToolTip="テーマ切り替え"
-                          Margin="0,0,16,0">
-                        <iconPacks:PackIconMaterial Kind="Brightness6"
-                                                  Width="20" Height="20"/>
-                    </Button>
-                    <Ellipse Fill="{Binding ConnectionStateFill}"
-                           Width="12" Height="12"
-                           VerticalAlignment="Center"
-                           Margin="0,0,8,0"/>
-                    <TextBlock Text="接続状態"
-                             Style="{StaticResource FluentMetricLabel}"
-                             VerticalAlignment="Center"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+        <GroupBox Grid.Row="0" Header="Image Processor Admin" Margin="4,4,4,2" Padding="8">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Ellipse Fill="{Binding ConnectionStateFill}"
+                       Width="12" Height="12"
+                       VerticalAlignment="Center"
+                       Margin="0,0,6,0"/>
+                <TextBlock Text="接続状態" VerticalAlignment="Center"/>
+            </StackPanel>
+        </GroupBox>
 
         <!-- キーワードセクション -->
-        <Border Grid.Row="1" Style="{StaticResource FluentCard}" Margin="8,8,8,4">
+        <GroupBox Grid.Row="1" Header="検索キーワード" Margin="4,2,4,2" Padding="8">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- セクションヘッダー -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                    <iconPacks:PackIconMaterial Kind="TagMultiple"
-                                              Width="24" Height="24"
-                                              Foreground="{StaticResource FluentAccentBrush}"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,12,0"/>
-                    <TextBlock Text="検索キーワード"
-                             Style="{StaticResource FluentSectionHeader}"
-                             Margin="0"/>
+                <!-- コントロールパネル -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Content="受信開始"
+                          Command="{Binding StartReceivingKeywordsCommand}"
+                          Margin="0,0,8,0" Padding="12,4"/>
+                    <Button Content="停止"
+                          Command="{Binding StopReceivingKeywordsCommand}"
+                          Margin="0,0,24,0" Padding="12,4"/>
+                    <TextBlock Text="受信済み:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="{Binding PostedKeywords.Count}" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- コントロールパネル -->
-                <Grid Grid.Row="1" Margin="0,0,0,16">
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="受信開始"
-                              Command="{Binding StartReceivingKeywordsCommand}"
-                              Style="{StaticResource FluentButton}"
-                              Margin="0,0,12,0">
-                            <Button.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <iconPacks:PackIconMaterial Kind="Play"
-                                                                  Width="16" Height="16"
-                                                                  Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </Button.ContentTemplate>
-                        </Button>
-                        <Button Content="停止"
-                              Command="{Binding StopReceivingKeywordsCommand}"
-                              Style="{StaticResource FluentButtonSecondary}"
-                              Margin="0,0,32,0">
-                            <Button.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <iconPacks:PackIconMaterial Kind="Stop"
-                                                                  Width="16" Height="16"
-                                                                  Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </Button.ContentTemplate>
-                        </Button>
-
-                        <Border Background="{DynamicResource FluentMetricBackgroundBrush}"
-                              CornerRadius="4"
-                              Padding="12,6"
-                              VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="受信済み:"
-                                         Style="{StaticResource FluentMetricLabel}"
-                                         VerticalAlignment="Center"
-                                         Margin="0,0,8,0"/>
-                                <TextBlock Text="{Binding PostedKeywords.Count}"
-                                         Style="{StaticResource FluentMetricValue}"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Grid>
-
                 <!-- キーワードリスト -->
-                <ScrollViewer Grid.Row="2"
+                <ScrollViewer Grid.Row="1"
                             HorizontalScrollBarVisibility="Disabled"
-                            VerticalScrollBarVisibility="Auto"
-                            Background="Transparent">
+                            VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding PostedKeywords}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -149,21 +69,12 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Style="{StaticResource FluentKeywordChip}"
-                                      MaxWidth="200">
-                                    <StackPanel Orientation="Horizontal">
-                                        <iconPacks:PackIconMaterial Kind="Tag"
-                                                                  Width="14" Height="14"
-                                                                  Foreground="{StaticResource FluentAccentBrush}"
-                                                                  VerticalAlignment="Center"
-                                                                  Margin="0,0,6,0"/>
-                                        <TextBlock Text="{Binding Value}"
-                                                 FontSize="{Binding FontSize}"
-                                                 Foreground="{DynamicResource FluentTextBrush}"
-                                                 VerticalAlignment="Center"
-                                                 TextTrimming="CharacterEllipsis"
-                                                 MaxWidth="150"/>
-                                    </StackPanel>
+                                <Border BorderBrush="Gray" BorderThickness="1"
+                                      CornerRadius="4" Margin="4,2" Padding="8,3">
+                                    <TextBlock Text="{Binding Value}"
+                                             FontSize="{Binding FontSize}"
+                                             TextTrimming="CharacterEllipsis"
+                                             MaxWidth="150"/>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -171,258 +82,100 @@
                 </ScrollViewer>
 
                 <!-- アクション -->
-                <StackPanel Grid.Row="3"
-                          Orientation="Horizontal"
-                          HorizontalAlignment="Right"
-                          Margin="0,12,0,0">
+                <StackPanel Grid.Row="2" Orientation="Horizontal"
+                          HorizontalAlignment="Right" Margin="0,8,0,0">
                     <Button Content="クリア"
                           Command="{Binding ClearKeywordsCommand}"
-                          Style="{StaticResource FluentButtonSecondary}">
-                        <Button.ContentTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <iconPacks:PackIconMaterial Kind="DeleteOutline"
-                                                              Width="16" Height="16"
-                                                              Margin="0,0,6,0"/>
-                                    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </Button.ContentTemplate>
-                    </Button>
+                          Padding="12,4"/>
                 </StackPanel>
             </Grid>
-        </Border>
+        </GroupBox>
 
         <!-- 画像収集セクション -->
-        <Border Grid.Row="2"
-                Style="{StaticResource FluentCard}"
-                Margin="8,4,8,4"
+        <GroupBox Grid.Row="2" Header="画像収集" Margin="4,2,4,2" Padding="8"
                 IsEnabled="{Binding Connection, Converter={StaticResource NullToBooleanConverter}, ConverterParameter=true}">
-            <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                    <iconPacks:PackIconMaterial Kind="ImageSearch"
-                                              Width="24" Height="24"
-                                              Foreground="{StaticResource FluentAccentBrush}"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,12,0"/>
-                    <TextBlock Text="画像収集"
-                             Style="{StaticResource FluentSectionHeader}"
-                             Margin="0"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Grid.Column="0">
+                    <Button Content="収集開始"
+                          Command="{Binding SearchImagesCommand}"
+                          Margin="0,0,24,0" Padding="12,4"/>
+
+                    <TextBlock Text="画像数:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox Text="{Binding ImagesPerKeyword}"
+                           Width="60" VerticalAlignment="Center" Margin="0,0,16,0"/>
+
+                    <TextBlock Text="検索スレッド:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox Text="{Binding ImageSearcherThreadCount}"
+                           Width="60" VerticalAlignment="Center" Margin="0,0,16,0"/>
+
+                    <TextBlock Text="DLスレッド:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox Text="{Binding ImageRetrieverThreadCount}"
+                           Width="60" VerticalAlignment="Center" Margin="0,0,16,0"/>
+
+                    <TextBlock Text="収集済み:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="{Binding OriginalImagePaths.Count, StringFormat='#,##0'}"
+                             VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Orientation="Horizontal" Grid.Column="0">
-                        <Button Content="収集開始"
-                              Command="{Binding SearchImagesCommand}"
-                              Style="{StaticResource FluentButton}"
-                              Margin="0,0,32,0">
-                            <Button.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <iconPacks:PackIconMaterial Kind="CloudDownload"
-                                                                  Width="16" Height="16"
-                                                                  Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </Button.ContentTemplate>
-                        </Button>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
-                            <TextBlock Text="画像数:"
-                                     Style="{StaticResource FluentMetricLabel}"
-                                     VerticalAlignment="Center"
-                                     Margin="0,0,8,0"
-                                     MinWidth="50"/>
-                            <controls:NumericUpDown Value="{Binding ImagesPerKeyword}"
-                                                  Minimum="1" Maximum="255"
-                                                  Width="80"
-                                                  VerticalAlignment="Center"/>
-                        </StackPanel>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
-                            <TextBlock Text="検索:"
-                                     Style="{StaticResource FluentMetricLabel}"
-                                     VerticalAlignment="Center"
-                                     Margin="0,0,8,0"
-                                     MinWidth="50"/>
-                            <controls:NumericUpDown Value="{Binding ImageSearcherThreadCount}"
-                                                  Minimum="1" Maximum="255"
-                                                  Width="80"
-                                                  VerticalAlignment="Center"/>
-                        </StackPanel>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
-                            <TextBlock Text="DL:"
-                                     Style="{StaticResource FluentMetricLabel}"
-                                     VerticalAlignment="Center"
-                                     Margin="0,0,8,0"
-                                     MinWidth="50"/>
-                            <controls:NumericUpDown Value="{Binding ImageRetrieverThreadCount}"
-                                                  Minimum="1" Maximum="255"
-                                                  Width="80"
-                                                  VerticalAlignment="Center"/>
-                        </StackPanel>
-
-                        <Border Background="{DynamicResource FluentMetricBackgroundBrush}"
-                              CornerRadius="4"
-                              Padding="12,6"
-                              VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <iconPacks:PackIconMaterial Kind="Image"
-                                                          Width="16" Height="16"
-                                                          Foreground="{DynamicResource FluentAccentBrush}"
-                                                          VerticalAlignment="Center"
-                                                          Margin="0,0,8,0"/>
-                                <TextBlock Text="{Binding OriginalImagePaths.Count, StringFormat='#,##0'}"
-                                         Style="{StaticResource FluentMetricValue}"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-
-                    <Button Content="クリア"
-                          Command="{Binding ClearOriginalImagesCommand}"
-                          Style="{StaticResource FluentButtonSecondary}"
-                          Grid.Column="1"
-                          HorizontalAlignment="Right"
-                          VerticalAlignment="Center">
-                        <Button.ContentTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <iconPacks:PackIconMaterial Kind="DeleteOutline"
-                                                              Width="16" Height="16"
-                                                              Margin="0,0,6,0"/>
-                                    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </Button.ContentTemplate>
-                    </Button>
-                </Grid>
-            </StackPanel>
-        </Border>
+                <Button Content="クリア"
+                      Command="{Binding ClearOriginalImagesCommand}"
+                      Grid.Column="1"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Padding="12,4"/>
+            </Grid>
+        </GroupBox>
 
         <!-- 画像処理セクション -->
-        <Border Grid.Row="3"
-                Style="{StaticResource FluentCard}"
-                Margin="8,4,8,8"
+        <GroupBox Grid.Row="3" Header="画像処理" Margin="4,2,4,4" Padding="8"
                 IsEnabled="{Binding Connection, Converter={StaticResource NullToBooleanConverter}, ConverterParameter=true}">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- セクションヘッダー -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                    <iconPacks:PackIconMaterial Kind="ImageEdit"
-                                              Width="24" Height="24"
-                                              Foreground="{StaticResource FluentAccentBrush}"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,12,0"/>
-                    <TextBlock Text="画像処理"
-                             Style="{StaticResource FluentSectionHeader}"
-                             Margin="0"/>
+                <!-- コントロールパネル -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Content="処理開始"
+                          Command="{Binding StartProcessingCommand}"
+                          Margin="0,0,16,0" Padding="12,4"/>
+
+                    <RadioButton Content="シングル"
+                               IsChecked="{Binding IsSingleThreadMode}"
+                               GroupName="ThreadMode"
+                               VerticalAlignment="Center"
+                               Margin="0,0,12,0"/>
+                    <RadioButton Content="マルチ"
+                               IsChecked="{Binding IsMultiThreadMode}"
+                               GroupName="ThreadMode"
+                               VerticalAlignment="Center"
+                               Margin="0,0,12,0"/>
+                    <TextBlock Text="スレッド数:" VerticalAlignment="Center"
+                             Margin="0,0,6,0"
+                             IsEnabled="{Binding IsMultiThreadMode}"/>
+                    <TextBox Text="{Binding ImageProcessorThreadCount}"
+                           Width="60" VerticalAlignment="Center"
+                           IsEnabled="{Binding IsMultiThreadMode}"
+                           Margin="0,0,24,0"/>
+
+                    <TextBlock Text="完了:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="{Binding ResultImagePaths.Count, StringFormat='#,##0'}"
+                             VerticalAlignment="Center" Margin="0,0,24,0"/>
+                    <TextBlock Text="{Binding ProcessingMilliseconds, StringFormat='#,##0 ms'}"
+                             VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- コントロールパネル -->
-                <Grid Grid.Row="1" Margin="0,0,0,16">
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="処理開始"
-                              Command="{Binding StartProcessingCommand}"
-                              Style="{StaticResource FluentButton}"
-                              Margin="0,0,20,0">
-                            <Button.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <iconPacks:PackIconMaterial Kind="Cog"
-                                                                  Width="16" Height="16"
-                                                                  Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </Button.ContentTemplate>
-                        </Button>
-
-                        <Border Background="{DynamicResource FluentMetricBackgroundBrush}"
-                              CornerRadius="4"
-                              Padding="12,8"
-                              Margin="0,0,20,0"
-                              VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <RadioButton Content="シングル"
-                                           IsChecked="{Binding IsSingleThreadMode}"
-                                           GroupName="ThreadMode"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,16,0"/>
-                                <RadioButton Content="マルチ"
-                                           IsChecked="{Binding IsMultiThreadMode}"
-                                           GroupName="ThreadMode"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,16,0"/>
-                                <StackPanel Orientation="Horizontal"
-                                          IsEnabled="{Binding IsMultiThreadMode}">
-                                    <TextBlock Text="数:"
-                                             Style="{StaticResource FluentMetricLabel}"
-                                             VerticalAlignment="Center"
-                                             Margin="0,0,8,0"
-                                             MinWidth="30"/>
-                                    <controls:NumericUpDown Value="{Binding ImageProcessorThreadCount}"
-                                                          Minimum="1" Maximum="255"
-                                                          Width="80"
-                                                          VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="{DynamicResource FluentMetricBackgroundBrush}"
-                              CornerRadius="4"
-                              Padding="12,6"
-                              Margin="0,0,12,0"
-                              VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <iconPacks:PackIconMaterial Kind="CheckCircle"
-                                                          Width="16" Height="16"
-                                                          Foreground="{StaticResource FluentSuccessBrush}"
-                                                          VerticalAlignment="Center"
-                                                          Margin="0,0,8,0"/>
-                                <TextBlock Text="完了:"
-                                         Style="{StaticResource FluentMetricLabel}"
-                                         VerticalAlignment="Center"
-                                         Margin="0,0,8,0"/>
-                                <TextBlock Text="{Binding ResultImagePaths.Count, StringFormat='#,##0'}"
-                                         Style="{StaticResource FluentMetricValue}"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="{DynamicResource FluentMetricBackgroundBrush}"
-                              CornerRadius="4"
-                              Padding="12,6"
-                              VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <iconPacks:PackIconMaterial Kind="Timer"
-                                                          Width="16" Height="16"
-                                                          Foreground="{DynamicResource FluentAccentBrush}"
-                                                          VerticalAlignment="Center"
-                                                          Margin="0,0,8,0"/>
-                                <TextBlock Text="{Binding ProcessingMilliseconds, StringFormat='#,##0 ms'}"
-                                         Style="{StaticResource FluentMetricValue}"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Grid>
-
                 <!-- 処理済み画像ギャラリー -->
-                <ScrollViewer Grid.Row="2"
+                <ScrollViewer Grid.Row="1"
                             HorizontalScrollBarVisibility="Disabled"
-                            VerticalScrollBarVisibility="Auto"
-                            Background="Transparent">
+                            VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding ResultImagePaths}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -431,19 +184,8 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="White"
-                                      BorderBrush="{StaticResource FluentBorderBrush}"
-                                      BorderThickness="1"
-                                      CornerRadius="8"
-                                      Margin="8"
-                                      Padding="4">
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="#000000"
-                                                        Direction="270"
-                                                        ShadowDepth="2"
-                                                        BlurRadius="8"
-                                                        Opacity="0.08"/>
-                                    </Border.Effect>
+                                <Border BorderBrush="Gray" BorderThickness="1"
+                                      Margin="4" Padding="2">
                                     <Image Source="{Binding}"
                                          Width="150"
                                          Height="150"
@@ -455,26 +197,13 @@
                 </ScrollViewer>
 
                 <!-- アクション -->
-                <StackPanel Grid.Row="3"
-                          Orientation="Horizontal"
-                          HorizontalAlignment="Right"
-                          Margin="0,12,0,0">
+                <StackPanel Grid.Row="2" Orientation="Horizontal"
+                          HorizontalAlignment="Right" Margin="0,8,0,0">
                     <Button Content="クリア"
                           Command="{Binding ClearResultImagesCommand}"
-                          Style="{StaticResource FluentButtonSecondary}">
-                        <Button.ContentTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <iconPacks:PackIconMaterial Kind="DeleteOutline"
-                                                              Width="16" Height="16"
-                                                              Margin="0,0,6,0"/>
-                                    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </Button.ContentTemplate>
-                    </Button>
+                          Padding="12,4"/>
                 </StackPanel>
             </Grid>
-        </Border>
+        </GroupBox>
     </Grid>
-</controls:MetroWindow>
+</Window>

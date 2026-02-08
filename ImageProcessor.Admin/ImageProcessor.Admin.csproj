@@ -13,9 +13,7 @@
     <!-- MVVM -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
 
-    <!-- UI Framework -->
-    <PackageReference Include="MahApps.Metro" Version="2.4.10" />
-    <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="5.0.0" />
+    <!-- Behaviors -->
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
 
     <!-- SignalR Client -->
