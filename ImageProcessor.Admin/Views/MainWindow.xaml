@@ -10,8 +10,8 @@
                       Height="900"
                       WindowStartupLocation="CenterScreen"
                       Background="{DynamicResource FluentBackgroundBrush}"
-                      BorderThickness="0"
-                      GlowBrush="{DynamicResource FluentAccentBrush}">
+                      BorderThickness="1"
+                      BorderBrush="{DynamicResource FluentBorderBrush}">
     <controls:MetroWindow.DataContext>
         <viewModels:MainViewModel />
     </controls:MetroWindow.DataContext>
