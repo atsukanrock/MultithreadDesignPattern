@@ -15,7 +15,7 @@ namespace ImageProcessor.Admin.Models
             _channel = channel;
         }
 
-        public event EventHandler<ExceptionThrownEventArgs<T>> ExceptionThrown;
+        public event EventHandler<ExceptionThrownEventArgs<T>>? ExceptionThrown;
 
         protected virtual void OnExceptionThrown(ExceptionThrownEventArgs<T> e)
         {
@@ -29,8 +29,7 @@ namespace ImageProcessor.Admin.Models
 
             while (!_channel.IsCompleted)
             {
-                T request;
-                if (!_channel.TryTake(out request, TimeSpan.FromSeconds(1.0)))
+                if (!_channel.TryTake(out var request, TimeSpan.FromSeconds(1.0)))
                 {
                     continue;
                 }

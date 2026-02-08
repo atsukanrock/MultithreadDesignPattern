@@ -14,7 +14,7 @@ namespace ImageProcessor.Admin.Models
         {
         }
 
-        public event EventHandler<ImageRetrievedEventArgs> ImageRetrieved;
+        public event EventHandler<ImageRetrievedEventArgs>? ImageRetrieved;
 
         protected virtual void OnImageRetrieved(ImageRetrievedEventArgs e)
         {
@@ -26,7 +26,7 @@ namespace ImageProcessor.Admin.Models
         {
             Trace.TraceInformation("Retrieving an image: {0}", imageUri);
 
-            HttpResponseMessage response = null;
+            HttpResponseMessage? response = null;
             try
             {
                 response = await new HttpClient().GetAsync(imageUri);

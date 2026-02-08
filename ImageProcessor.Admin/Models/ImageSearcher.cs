@@ -17,7 +17,7 @@ namespace ImageProcessor.Admin.Models
             _imagesPerKeyword = imagesPerKeyword;
         }
 
-        public event EventHandler<ImageSearchedEventArgs> ImageSearched;
+        public event EventHandler<ImageSearchedEventArgs>? ImageSearched;
 
         protected virtual void OnImageSearched(ImageSearchedEventArgs e)
         {
@@ -40,7 +40,8 @@ namespace ImageProcessor.Admin.Models
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            var searchResult = JsonConvert.DeserializeObject<UnsplashSearchResult>(json);
+            var searchResult = JsonConvert.DeserializeObject<UnsplashSearchResult>(json)
+                ?? throw new InvalidOperationException("Failed to deserialize search result");
 
             OnImageSearched(new ImageSearchedEventArgs(keyword, searchResult));
         }

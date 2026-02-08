@@ -27,7 +27,7 @@
 
     <!-- Reactive Extensions -->
     <PackageReference Include="System.Reactive" Version="6.1.0" />
-    <PackageReference Include="System.Reactive.Windows.Threading" Version="6.1.0" />
+    <PackageReference Include="System.Reactive.Windows.Threading" Version="6.1.0" NoWarn="NU1701" />
 
     <!-- Image Processing -->
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
