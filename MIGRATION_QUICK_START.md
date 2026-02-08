@@ -1,20 +1,20 @@
-# .NET 8 移行クイックスタートガイド
+# .NET 10 移行クイックスタートガイド
 
-このガイドでは、プロジェクトを .NET Framework 4.5 から .NET 8.0 に段階的に移行する手順を説明します。
+このガイドでは、プロジェクトを .NET Framework 4.5 から .NET 10.0 に段階的に移行する手順を説明します。
 
 ## 移行ステータス (2026-02-03 更新)
 
 ```
-✅ 1. ImageSearch (PCL)           → .NET 8 (完了)
-✅ 2. ImageProcessor.Core         → .NET 8 (完了)
-✅ 3. ImageProcessor.SimpleWorker → .NET 8 Worker Service (完了)
-✅ 4. ImageProcessor.MultithreadWorker → .NET 8 Worker Service (完了)
-✅ 5. ImageProcessor.SearchWorker → .NET 8 Worker Service (完了)
-✅ 6. ImageProcessor.Admin        → .NET 8 WPF (完了 - Windows で起動確認済み)
-⏳ 7. ImageProcessor.Web          → ASP.NET Core 8.0 (未着手)
+✅ 1. ImageSearch (PCL)           → .NET 10 (完了)
+✅ 2. ImageProcessor.Core         → .NET 10 (完了)
+✅ 3. ImageProcessor.SimpleWorker → .NET 10 Worker Service (完了)
+✅ 4. ImageProcessor.MultithreadWorker → .NET 10 Worker Service (完了)
+✅ 5. ImageProcessor.SearchWorker → .NET 10 Worker Service (完了)
+✅ 6. ImageProcessor.Admin        → .NET 10 WPF (完了 - Windows で起動確認済み)
+✅ 7. ImageProcessor.Web          → ASP.NET Core 10.0 (完了)
 ```
 
-**進捗**: 6/7 プロジェクト完了 (85.7%)
+**進捗**: 7/7 プロジェクト完了 (100%)
 
 ## 新しいドキュメント
 
@@ -29,12 +29,12 @@
 ## 移行の優先順位（参考）
 
 ```
-1. ImageSearch (PCL)           → .NET 8 (簡単、依存なし)
-2. ImageProcessor.Core         → .NET 8 (中程度、Azure SDK 依存あり)
-3. ImageProcessor.SimpleWorker → .NET 8 Worker Service
-4. ImageProcessor.MultithreadWorker → .NET 8 Worker Service
-5. ImageProcessor.SearchWorker → .NET 8 Worker Service
-6. ImageProcessor.Admin        → .NET 8 WPF
+1. ImageSearch (PCL)           → .NET 10 (簡単、依存なし)
+2. ImageProcessor.Core         → .NET 10 (中程度、Azure SDK 依存あり)
+3. ImageProcessor.SimpleWorker → .NET 10 Worker Service
+4. ImageProcessor.MultithreadWorker → .NET 10 Worker Service
+5. ImageProcessor.SearchWorker → .NET 10 Worker Service
+6. ImageProcessor.Admin        → .NET 10 WPF
 7. ImageProcessor.Web          → ASP.NET Core 8.0
 ```
 
@@ -57,7 +57,7 @@ cp ImageSearch.csproj ImageSearch.csproj.framework
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -95,7 +95,7 @@ Azure ServiceRuntime への依存を削除する必要があります：
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -184,7 +184,7 @@ public abstract class WorkerEntryPoint : IWorkerEntryPoint
 mv ImageProcessor.SimpleWorker ImageProcessor.SimpleWorker.old
 
 # 新しい Worker Service を作成
-dotnet new worker -n ImageProcessor.SimpleWorker -f net8.0
+dotnet new worker -n ImageProcessor.SimpleWorker -f net10.0
 cd ImageProcessor.SimpleWorker
 ```
 
@@ -196,7 +196,7 @@ cd ImageProcessor.SimpleWorker
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-ImageProcessor.SimpleWorker-xxx</UserSecretsId>
@@ -353,7 +353,7 @@ dotnet run
 SimpleWorker と同様の手順で、Producer-Consumer パターンを `System.Threading.Channels` を使って実装します。
 
 ```bash
-dotnet new worker -n ImageProcessor.MultithreadWorker -f net8.0
+dotnet new worker -n ImageProcessor.MultithreadWorker -f net10.0
 ```
 
 ### Channel を使った実装例
@@ -540,7 +540,7 @@ var url = blobClient.Uri.ToString();
 
 ## 参考資料
 
-- [.NET 8 の新機能](https://learn.microsoft.com/ja-jp/dotnet/core/whats-new/dotnet-8)
+- [.NET 10 の新機能](https://learn.microsoft.com/ja-jp/dotnet/core/whats-new/dotnet-10)
 - [.NET Framework から .NET への移行](https://learn.microsoft.com/ja-jp/dotnet/core/porting/)
 - [ImageSharp ドキュメント](https://docs.sixlabors.com/articles/imagesharp/)
 - [Azure Storage SDK v12 移行ガイド](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-dotnet-migration-guide)

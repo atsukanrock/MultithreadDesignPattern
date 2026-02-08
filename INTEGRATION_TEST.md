@@ -25,7 +25,7 @@
            ↓
 ┌─────────────────────┐
 │ SearchWorker        │ ← キーワードで画像検索
-│ (Worker Service)    │    Bing Search API 使用
+│ (Worker Service)    │    Unsplash API 使用
 └──────────┬──────────┘
            │ 画像 URL を Queue に送信
            ↓
@@ -45,12 +45,12 @@
 ## 前提条件
 
 ### 必須
-- .NET 8 SDK
+- .NET 10 SDK
 - Windows (ImageProcessor.Admin 用)
 - Azurite または Azure Storage Emulator
 
 ### オプション
-- Bing Search API キー (画像検索機能を使う場合)
+- Unsplash API キー (画像検索機能を使う場合)
 
 ## ステップ 1: Azure Storage のセットアップ
 
@@ -146,7 +146,7 @@ cd ..
 
 ### 2.3 SearchWorker の設定 (オプション)
 
-Bing Search API を使用する場合、`ImageProcessor.SearchWorker/appsettings.json`:
+Unsplash API を使用する場合、`ImageProcessor.SearchWorker/appsettings.json`:
 
 ```json
 {
@@ -154,8 +154,8 @@ Bing Search API を使用する場合、`ImageProcessor.SearchWorker/appsettings
     "StorageAccount": "UseDevelopmentStorage=true"
   },
   "BingSearch": {
-    "ApiKey": "your-bing-api-key",
-    "Endpoint": "https://api.bing.microsoft.com/v7.0/images/search"
+    "AccessKey": "YOUR_UNSPLASH_ACCESS_KEY_HERE",
+    
   }
 }
 ```
@@ -382,7 +382,7 @@ jobs:
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       - name: Start Azurite
         run: |
           npm install -g azurite

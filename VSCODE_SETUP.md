@@ -4,50 +4,24 @@
 
 ## 前提条件
 
-### Windows で開発する場合（.NET Framework プロジェクト）
+### Windows/Linux/WSL2 で開発する場合
 
-1. **Visual Studio Build Tools** または **Visual Studio 2022**
-   - [Visual Studio Build Tools のダウンロード](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022)
-   - 「.NET デスクトップ ビルド ツール」をインストール
-
-2. **.NET Framework 4.5 SDK**（Visual Studio に含まれる）
-
-3. **NuGet CLI**
-   ```powershell
-   # PowerShell で実行
-   choco install nuget.commandline
-   # または
-   winget install Microsoft.NuGet
-   ```
-
-4. **MSBuild** が PATH に含まれていることを確認
-   ```powershell
-   msbuild -version
-   ```
-
-   PATH に追加する必要がある場合：
-   ```powershell
-   C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin
-   ```
-
-### Linux/WSL2 で開発する場合（.NET 8 移行後のプロジェクト）
-
-1. **.NET 8 SDK**
+1. **.NET 10 SDK**
    ```bash
    # Ubuntu/Debian
    wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
    chmod +x dotnet-install.sh
-   ./dotnet-install.sh --channel 8.0
+   ./dotnet-install.sh --channel 10.0
 
    # または
    sudo apt-get update
-   sudo apt-get install -y dotnet-sdk-8.0
+   sudo apt-get install -y dotnet-sdk-10.0
    ```
 
 2. **確認**
    ```bash
    dotnet --version
-   # 8.0.x と表示されることを確認
+   # 10.0.x と表示されることを確認
    ```
 
 ## VSCode 拡張機能のインストール
@@ -74,41 +48,11 @@ code --install-extension ms-dotnettools.csharp
 
 ## プロジェクトのビルド
 
-### .NET Framework プロジェクト（Windows のみ）
-
-1. **NuGet パッケージの復元**
-   ```bash
-   # VSCode のターミナルで実行
-   Ctrl+Shift+P → "Tasks: Run Task" → "restore-nuget"
-   ```
-
-   または手動で：
-   ```powershell
-   nuget restore MultithreadDesignPattern.sln
-   ```
-
-2. **ソリューションのビルド**
-   ```bash
-   Ctrl+Shift+B → "build-framework" を選択
-   ```
-
-   または手動で：
-   ```powershell
-   msbuild /p:Configuration=Debug MultithreadDesignPattern.sln
-   ```
-
-3. **個別プロジェクトのビルド**
-   ```bash
-   Ctrl+Shift+P → "Tasks: Run Task" →
-   - "build-web-framework" (Web プロジェクト)
-   - "build-simpleworker-framework" (Worker プロジェクト)
-   ```
-
-### .NET 8 プロジェクト（Linux/Windows/macOS）
+### .NET 10 プロジェクト（Linux/Windows/macOS）
 
 1. **ビルド**
    ```bash
-   Ctrl+Shift+B (デフォルトタスク: build-dotnet8)
+   Ctrl+Shift+B
    ```
 
    または手動で：
@@ -118,31 +62,22 @@ code --install-extension ms-dotnettools.csharp
 
 2. **クリーンビルド**
    ```bash
-   Ctrl+Shift+P → "Tasks: Run Task" → "clean-dotnet8"
+   dotnet clean
    dotnet build
    ```
 
 ## デバッグ
 
-### .NET Framework プロジェクトのデバッグ（Windows）
+### .NET 10 プロジェクトのデバッグ（Linux/Windows/macOS）
 
 1. VSCode のサイドバーから「実行とデバッグ」を選択（Ctrl+Shift+D）
 
 2. デバッグ構成を選択：
-   - **.NET Framework: ProducerConsumer Console** - コンソールアプリのデバッグ
-   - **.NET Framework: MultithreadDesignPattern Console** - デザインパターンサンプル
-   - **.NET Framework: Web (Windows)** - Web アプリケーション
+   - **Web** - Web アプリケーション
+   - **SimpleWorker** - Worker サービス
+   - **MultithreadWorker** - マルチスレッド Worker
 
 3. F5 を押してデバッグ開始
-
-### .NET 8 プロジェクトのデバッグ（Linux/Windows/macOS）
-
-1. デバッグ構成を選択：
-   - **.NET 8: Web (移行後)** - Web アプリケーション
-   - **.NET 8: SimpleWorker (移行後)** - Worker サービス
-   - **.NET 8: MultithreadWorker (移行後)** - マルチスレッド Worker
-
-2. F5 を押してデバッグ開始
 
 ### ブレークポイントの設定
 
@@ -161,89 +96,28 @@ code --install-extension ms-dotnettools.csharp
 
 ## 現在のプロジェクト状態
 
-### ビルド可能なプロジェクト
+### ビルド可能なプロジェクト（全て .NET 10）
 
-#### Windows のみ（.NET Framework 4.5）
+#### Windows/Linux/macOS
 - ✅ MultithreadDesignPattern (コンソール)
 - ✅ ProducerConsumer.ConsoleApp (コンソール)
-- ✅ ImageProcessor.Web (Web)
-- ✅ ImageProcessor.SimpleWorker (Worker Role)
-- ✅ ImageProcessor.MultithreadWorker (Worker Role)
-- ✅ ImageProcessor.SearchWorker (Worker Role)
 - ✅ ImageProcessor.Core (ライブラリ)
-- ✅ ImageSearch (PCL)
+- ✅ ImageSearch (ライブラリ)
+- ✅ ImageProcessor.Web (ASP.NET Core)
+- ✅ ImageProcessor.SimpleWorker (Worker Service)
+- ✅ ImageProcessor.MultithreadWorker (Worker Service)
+- ✅ ImageProcessor.SearchWorker (Worker Service)
 
-#### Linux/WSL2
-- ❌ 現在はビルド不可（.NET Framework のため）
-- ⏳ .NET 8 への移行が必要
-
-## .NET 8 への移行ステップ
-
-### フェーズ 1: ImageSearch の移行（最も簡単）
-
-ImageSearch は依存関係のない PCL プロジェクトなので、最初に移行するのに最適です。
-
-1. **新しいプロジェクトファイルの作成**
-   ```bash
-   cd ImageSearch
-   # 既存の .csproj をバックアップ
-   mv ImageSearch.csproj ImageSearch.csproj.old
-   # 新しい .NET 8 プロジェクトを作成
-   dotnet new classlib -n ImageSearch -f net8.0
-   ```
-
-2. **既存のソースファイルをそのまま使用**（すでに存在するため、上書きしない）
-
-3. **ビルドとテスト**
-   ```bash
-   dotnet build
-   ```
-
-詳細な移行手順は後で提供します。
-
-### フェーズ 2: ImageProcessor.Core の移行
-
-Azure ServiceRuntime 依存を削除する必要があります。
-
-### フェーズ 3: Worker プロジェクトの移行
-
-Worker Service テンプレートを使用します。
-
-### フェーズ 4: Web プロジェクトの移行
-
-ASP.NET Core に移行します。
+#### Windows のみ
+- ✅ ImageProcessor.Admin (WPF)
 
 ## トラブルシューティング
-
-### Windows: "msbuild が見つかりません"
-
-```powershell
-# Developer Command Prompt for VS 2022 を開く
-# または PATH に MSBuild を追加
-$env:PATH += ";C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin"
-```
-
-### Windows: "nuget が見つかりません"
-
-```powershell
-# chocolatey でインストール
-choco install nuget.commandline
-
-# または手動ダウンロード
-# https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-# PATH に追加
-```
 
 ### OmniSharp が起動しない
 
 1. VSCode を再起動
 2. OmniSharp のログを確認: `Ctrl+Shift+P` → "OmniSharp: Show OmniSharp Log"
 3. .NET SDK が正しくインストールされているか確認
-
-### Linux: .NET Framework プロジェクトがビルドできない
-
-正常な動作です。.NET Framework は Windows 専用のため、Linux ではビルドできません。
-.NET 8 への移行を進めてください。
 
 ### デバッグが開始しない
 
@@ -279,25 +153,18 @@ choco install nuget.commandline
 ## 次のステップ
 
 1. **開発環境の確認**
-   - Windows の場合: Visual Studio Build Tools のインストール
-   - Linux の場合: .NET 8 SDK のインストール
+   - .NET 10 SDK がインストールされているか確認
+   - `dotnet --version` で `10.0.x` と表示されることを確認
 
 2. **プロジェクトのビルド**
-   - Windows で .NET Framework プロジェクトをビルド
-   - 動作確認
+   - `dotnet build` でビルド確認
 
-3. **.NET 8 移行の開始**
-   - ImageSearch プロジェクトから移行開始
-   - ビルドとテストの実施
-
-4. **段階的な移行**
-   - Core → Workers → Web の順に移行
-   - 各ステップでテストを実施
+3. **実行**
+   - [GETTING_STARTED.md](GETTING_STARTED.md) を参照
 
 ## 参考資料
 
 - [VSCode C# 開発](https://code.visualstudio.com/docs/languages/csharp)
-- [.NET 8 ドキュメント](https://learn.microsoft.com/ja-jp/dotnet/core/whats-new/dotnet-8)
-- [ASP.NET Core 移行ガイド](https://learn.microsoft.com/ja-jp/aspnet/core/migration/proper-to-2x/)
+- [.NET 10 ドキュメント](https://learn.microsoft.com/ja-jp/dotnet/core/whats-new/dotnet-10)
 - [VSCode タスク](https://code.visualstudio.com/docs/editor/tasks)
 - [VSCode デバッグ](https://code.visualstudio.com/docs/editor/debugging)
