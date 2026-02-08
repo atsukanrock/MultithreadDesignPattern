@@ -180,3 +180,8 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+
+# シークレット（API キーなどを含むローカル設定ファイル）
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
